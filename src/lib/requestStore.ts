@@ -308,12 +308,12 @@ export function useRequestStore() {
     notify();
   }, []);
 
-  /** SPOC can edit the load (Max Demand in kVAH) on a submitted request */
-  const updateLoadKVAH = useCallback((requestId: string, totalKVAH: number) => {
+  /** SPOC can edit the load (Max Demand in kVA + kVAH for SD) on a submitted request */
+  const updateLoad = useCallback((requestId: string, totalKVA: number, totalKVAH: number) => {
     globalRequests = globalRequests.map((r) => {
       if (r.id !== requestId) return r;
-      const existing: LoadData = r.loadData ?? { method: "upload", totalKW: 0, totalKVAH: 0 };
-      return { ...r, loadData: { ...existing, totalKVAH } };
+      const existing: LoadData = r.loadData ?? { method: "upload", totalKVA: 0, totalKVAH: 0 };
+      return { ...r, loadData: { ...existing, totalKVA, totalKVAH } };
     });
     notify();
   }, []);
@@ -332,6 +332,6 @@ export function useRequestStore() {
     rejectExtension,
     deactivateConnection,
     updateRequestAddress,
-    updateLoadKVAH,
+    updateLoad,
   };
 }
