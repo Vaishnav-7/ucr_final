@@ -1190,6 +1190,17 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                               <span className="text-muted-foreground">Workflow:</span>
                               <span className="ml-2 text-foreground">{getWorkflowLabel(req.workflowType)}</span>
                             </div>
+                            {req.selectedMeter && (
+                              <div className="col-span-2">
+                                <span className="text-muted-foreground">Selected Meter:</span>
+                                <span className="ml-2 text-foreground font-medium">
+                                  {req.selectedMeter.make} — {req.selectedMeter.model}
+                                </span>
+                                <span className="ml-2 text-xs text-muted-foreground">
+                                  ({req.selectedMeter.conn}, CT: {req.selectedMeter.ct})
+                                </span>
+                              </div>
+                            )}
                             <div className="col-span-2">
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 min-w-0">
