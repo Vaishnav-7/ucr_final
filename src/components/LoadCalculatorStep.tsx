@@ -88,6 +88,13 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
     );
   };
 
+  const updateCustomHours = (id: string, value: string) => {
+    const num = parseFloat(value);
+    setCustomAppliances((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, hours: isNaN(num) ? 0 : num } : a))
+    );
+  };
+
   const removeCustom = (id: string) => {
     setCustomAppliances((prev) => prev.filter((a) => a.id !== id));
   };
