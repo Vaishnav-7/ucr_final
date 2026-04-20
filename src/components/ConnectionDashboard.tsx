@@ -539,14 +539,12 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                     <div className="mt-3 p-3 rounded-lg bg-destructive/5 border border-destructive/10">
                       <p className="text-xs text-destructive font-medium mb-1">⚠ Rejection Reason:</p>
                       <p className="text-xs text-foreground/80">{req.rejectionReason}</p>
-                      {req.rejectedFromStageId !== "finance-confirms" && (
-                        <button
-                          onClick={() => clearRejection(req.id)}
-                          className="mt-2 inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline"
-                        >
-                          <RefreshCw className="w-3 h-3" /> Re-submit documents
-                        </button>
-                      )}
+                      <button
+                        onClick={() => clearRejection(req.id)}
+                        className="mt-2 inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline"
+                      >
+                        <RefreshCw className="w-3 h-3" /> Re-submit documents
+                      </button>
                     </div>
                   )}
 
