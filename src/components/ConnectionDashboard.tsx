@@ -86,11 +86,22 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
     const stages = getWorkflowStages(r.workflowType);
     return r.stageIndex >= stages.length - 1;
   });
+  // A rejection is "actionable" by the customer if the stage it was rejected from
+  // requires a customer action (e.g. SD Payment, Meter Upload). SD Verification
+  // rejections are not actionable — they remain only in the Rejected tab.
+  const isActionableRejection = (r: typeof requests[number]) => {
+    if (!r.rejectionReason || !r.rejectedFromStageId) return false;
+    const stages = getWorkflowStages(r.workflowType);
+    const rejectedStage = stages.find((s) => s.id === r.rejectedFromStageId);
+    return !!rejectedStage?.userActionRequired;
+  };
   const rejectedRequests = requests.filter((r) => !!r.rejectionReason);
   const actionRequests = requests.filter((r) => {
     const stages = getWorkflowStages(r.workflowType);
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
-    return r.stageIndex < stages.length - 1 && stage.userActionRequired && !r.rejectionReason;
+    if (r.stageIndex >= stages.length - 1) return false;
+    if (r.rejectionReason) return isActionableRejection(r);
+    return stage.userActionRequired;
   });
   const progressRequests = requests.filter((r) => {
     const stages = getWorkflowStages(r.workflowType);
