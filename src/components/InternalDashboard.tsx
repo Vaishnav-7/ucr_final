@@ -1251,7 +1251,12 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                             </div>
                             <div>
                               <span className="text-muted-foreground">Current Stage:</span>
-                              <span className="ml-2 text-foreground font-medium">{currentStage.label}</span>
+                              <span className="ml-2 text-foreground font-medium">
+                                {currentStage.label}
+                                {currentStage.id === "sd-payment" && req.sdDecision === "pending" && req.sdAmount && (
+                                  <span className="ml-1 text-accent font-semibold">(₹{Number(req.sdAmount).toLocaleString("en-IN")})</span>
+                                )}
+                              </span>
                             </div>
                             <div>
                               <span className="text-muted-foreground">Progress:</span>
