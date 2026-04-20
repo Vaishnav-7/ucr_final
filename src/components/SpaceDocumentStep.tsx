@@ -129,8 +129,9 @@ const SpaceDocumentStep = ({ onNext, onBack }: SpaceDocumentStepProps) => {
             className="input-glass w-full appearance-none pr-10"
           >
             <option value="">— Select Department —</option>
-            <option value="aero">Aero</option>
-            <option value="non-aero">Non-Aero</option>
+            {DEPARTMENT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         </div>
