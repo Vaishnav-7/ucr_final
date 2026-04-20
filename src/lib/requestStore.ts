@@ -20,11 +20,12 @@ export interface LoadAppliance {
 
 export interface LoadData {
   method: "calculator" | "upload";
-  totalKW: number;
-  /** Maximum demand in kVAH (kW × hours / power factor). Primary metric. */
+  /** Maximum demand in kVA — primary value shown to users. */
+  totalKVA: number;
+  /** Energy in kVAH (kVA × hours) — used only for SD calculation. */
   totalKVAH: number;
-  /** @deprecated kept for legacy seed data; use totalKVAH. */
-  totalKVA?: number;
+  /** @deprecated kept for legacy data; not displayed. */
+  totalKW?: number;
   appliances?: LoadAppliance[];
   docUploaded?: boolean;
 }
