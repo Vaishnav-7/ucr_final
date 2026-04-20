@@ -62,7 +62,7 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
       }
       loadData = {
         method: ld.method || "calculator",
-        totalKW: ld.totalKW || 0,
+        totalKVA: ld.totalKVA || 0,
         totalKVAH: ld.totalKVAH || 0,
         appliances: appliances.length > 0 ? appliances : undefined,
         docUploaded: ld.docUploaded || false,
