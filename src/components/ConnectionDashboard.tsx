@@ -374,7 +374,7 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                               )}
                               {req.userDetails.customerCode && (
                                 <div>
-                                  <span className="text-muted-foreground">Code:</span>
+                                  <span className="text-muted-foreground">Customer Code:</span>
                                   <span className="ml-2 text-foreground">{req.userDetails.customerCode}</span>
                                 </div>
                               )}
