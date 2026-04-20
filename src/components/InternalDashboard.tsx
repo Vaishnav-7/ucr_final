@@ -1065,12 +1065,14 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
         {/* Request List */}
         <div className="glass-card p-6">
-          <h2 className="text-xl font-bold font-display text-foreground mb-6 capitalize">{dashFilter === "all" ? "All" : dashFilter} Requests</h2>
+          <h2 className="text-xl font-bold font-display text-foreground mb-6">
+            {stats.find((s) => s.filter === dashFilter)?.label ?? "Requests"}
+          </h2>
 
           {displayRequests.length === 0 ? (
             <div className="text-center py-12">
               <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-3" />
-              <p className="text-muted-foreground">No {dashFilter} requests. All caught up!</p>
+              <p className="text-muted-foreground">No requests to show. All caught up!</p>
             </div>
           ) : (
             <div className="space-y-4">
