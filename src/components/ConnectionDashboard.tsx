@@ -190,13 +190,15 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
       {/* Requests */}
       <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold font-display text-foreground capitalize">{dashFilter} Requests</h2>
+          <h2 className="text-xl font-bold font-display text-foreground">
+            {stats.find((s) => s.filter === dashFilter)?.label ?? "Requests"}
+          </h2>
         </div>
 
         {filteredRequests.length === 0 ? (
           <div className="text-center py-12">
             <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-3" />
-            <p className="text-muted-foreground">No {dashFilter} requests.</p>
+            <p className="text-muted-foreground">No requests to show.</p>
           </div>
         ) : (
           <div className="space-y-4">
