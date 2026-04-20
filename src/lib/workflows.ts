@@ -177,7 +177,7 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "sd-calculation", label: "SD Calculation", userActionRequired: false },
     { id: "sd-payment", label: "SD Payment", userActionRequired: true, actions: [SD_UPLOAD_ACTION] },
-    { id: "finance-confirms", label: "Finance Confirms", userActionRequired: false },
+    { id: "finance-confirms", label: "SD Verification", userActionRequired: false },
     { id: "meter-recommendation", label: "Meter Recommendation", userActionRequired: true, actions: METER_ACTIONS },
     { id: "calibration-uploaded", label: "Calibration Certificate Uploaded", userActionRequired: false },
     { id: "slotting", label: "Slotting", userActionRequired: false },
