@@ -347,7 +347,7 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                             Verify
                           </button>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">OTP sent to {email}</p>
+                        
                       </div>
                     )}
                   </div>
@@ -405,7 +405,7 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                             Verify
                           </button>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">OTP sent to {mobile}</p>
+                        
                       </div>
                     )}
                   </div>
@@ -681,7 +681,7 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
                             className="input-glass w-full text-center text-lg tracking-[0.5em]"
                             maxLength={6}
                           />
-                          <p className="text-xs text-muted-foreground mt-1.5">OTP sent to {mobile}</p>
+                          
                         </div>
 
                         <button
