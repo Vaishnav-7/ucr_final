@@ -152,16 +152,30 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs text-muted-foreground whitespace-nowrap">kW per unit:</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.001"
-                      value={kwValues[appliance.name]}
-                      onChange={(e) => updateKw(appliance.name, e.target.value)}
-                      className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground whitespace-nowrap">kW/unit:</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.001"
+                        value={kwValues[appliance.name]}
+                        onChange={(e) => updateKw(appliance.name, e.target.value)}
+                        className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground whitespace-nowrap">Hours/day:</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="24"
+                        step="0.5"
+                        value={hoursValues[appliance.name]}
+                        onChange={(e) => updateHours(appliance.name, e.target.value)}
+                        className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -201,16 +215,30 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
                         </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-muted-foreground whitespace-nowrap">kW per unit:</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.001"
-                        value={appliance.kw}
-                        onChange={(e) => updateCustomKw(appliance.id, e.target.value)}
-                        className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-                      />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-muted-foreground whitespace-nowrap">kW/unit:</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.001"
+                          value={appliance.kw}
+                          onChange={(e) => updateCustomKw(appliance.id, e.target.value)}
+                          className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-muted-foreground whitespace-nowrap">Hours/day:</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="24"
+                          step="0.5"
+                          value={appliance.hours}
+                          onChange={(e) => updateCustomHours(appliance.id, e.target.value)}
+                          className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
