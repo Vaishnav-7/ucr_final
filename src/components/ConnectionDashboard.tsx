@@ -21,7 +21,7 @@ interface ConnectionDashboardProps {
 type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProps) => {
-  const { requests, advanceStage, markActionCompleted, clearRejection, requestExtension, deactivateConnection } = useRequestStore();
+  const { requests, advanceStage, markActionCompleted, clearRejection, requestExtension, deactivateConnection, selectPowerMeter } = useRequestStore();
   const { getDocumentsForRequest } = useDocumentStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
@@ -639,15 +639,21 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                   )}
 
                   {/* Power Meter Recommendations */}
-                  {actionRequired && currentStage.id === "customer-meter-upload" && req.workflowType === "power-regular" && (
+                  {actionRequired && (currentStage.id === "customer-meter-upload" || currentStage.id === "meter-recommendation") && req.utility === "Power" && (
                     <div className="mt-3">
                       <button
                         onClick={() => setMeterRecsOpen(meterRecsOpen === req.id ? null : req.id)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-info/10 text-info hover:bg-info/20 transition-colors"
                       >
                         <Info className="w-3.5 h-3.5" />
-                        {meterRecsOpen === req.id ? "Hide Meter Recommendations" : "Show Meter Recommendations"}
+                        {meterRecsOpen === req.id ? "Hide Meter Options" : (req.selectedMeter ? "Change Selected Meter" : "Select a Meter")}
                       </button>
+                      {req.selectedMeter && meterRecsOpen !== req.id && (
+                        <p className="text-xs text-success mt-2 inline-flex items-center gap-1.5 ml-2">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Selected: <span className="font-medium text-foreground">{req.selectedMeter.make} — {req.selectedMeter.model}</span>
+                        </p>
+                      )}
                       <AnimatePresence>
                         {meterRecsOpen === req.id && (
                           <motion.div
@@ -656,10 +662,12 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                             exit={{ opacity: 0, height: 0 }}
                             className="mt-2 space-y-3"
                           >
+                            <p className="text-xs text-muted-foreground">Choose one meter to procure. Calibration certificate upload will unlock after a meter is selected.</p>
                             <div className="rounded-lg border border-border overflow-hidden">
                             <Table>
                               <TableHeader>
                                 <TableRow className="bg-muted/50">
+                                  <TableHead className="text-xs font-bold w-10"></TableHead>
                                   <TableHead className="text-xs font-bold">Make of Energy Meter</TableHead>
                                   <TableHead className="text-xs font-bold">Model Number</TableHead>
                                   <TableHead className="text-xs font-bold">Connection Type</TableHead>
@@ -668,15 +676,34 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {powerRows.map((row, idx) => (
-                                  <TableRow key={idx}>
-                                    <TableCell className="text-xs">{row.make}</TableCell>
-                                    <TableCell className="text-xs">{row.model}</TableCell>
-                                    <TableCell className="text-xs">{row.conn}</TableCell>
-                                    <TableCell className="text-xs">{row.ct}</TableCell>
-                                    <TableCell className="text-xs">{row.remark}</TableCell>
-                                  </TableRow>
-                                ))}
+                                {powerRows.map((row, idx) => {
+                                  const isSelected =
+                                    req.selectedMeter &&
+                                    req.selectedMeter.make === row.make &&
+                                    req.selectedMeter.model === row.model;
+                                  return (
+                                    <TableRow
+                                      key={idx}
+                                      onClick={() => selectPowerMeter(req.id, row)}
+                                      className={`cursor-pointer transition-colors ${isSelected ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/40"}`}
+                                    >
+                                      <TableCell className="text-xs">
+                                        <input
+                                          type="radio"
+                                          name={`meter-${req.id}`}
+                                          checked={!!isSelected}
+                                          onChange={() => selectPowerMeter(req.id, row)}
+                                          className="cursor-pointer accent-primary"
+                                        />
+                                      </TableCell>
+                                      <TableCell className="text-xs">{row.make}</TableCell>
+                                      <TableCell className="text-xs">{row.model}</TableCell>
+                                      <TableCell className="text-xs">{row.conn}</TableCell>
+                                      <TableCell className="text-xs">{row.ct}</TableCell>
+                                      <TableCell className="text-xs">{row.remark}</TableCell>
+                                    </TableRow>
+                                  );
+                                })}
                               </TableBody>
                             </Table>
                             </div>
