@@ -58,7 +58,6 @@ const UtilitySelectionStep = ({ onNext, onBack }: UtilitySelectionStepProps) => 
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl mx-auto">
       <div className="mb-8">
         <h2 className="text-2xl font-bold font-display text-foreground">Utility Connection Type</h2>
-        <p className="text-muted-foreground mt-1">Choose what you need and the type of connection</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
