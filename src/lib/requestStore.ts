@@ -307,6 +307,16 @@ export function useRequestStore() {
     notify();
   }, []);
 
+  /** SPOC can edit the load (Max Demand in kVAH) on a submitted request */
+  const updateLoadKVAH = useCallback((requestId: string, totalKVAH: number) => {
+    globalRequests = globalRequests.map((r) => {
+      if (r.id !== requestId) return r;
+      const existing: LoadData = r.loadData ?? { method: "upload", totalKW: 0, totalKVAH: 0 };
+      return { ...r, loadData: { ...existing, totalKVAH } };
+    });
+    notify();
+  }, []);
+
   return {
     requests: globalRequests,
     advanceStage,
@@ -321,5 +331,6 @@ export function useRequestStore() {
     rejectExtension,
     deactivateConnection,
     updateRequestAddress,
+    updateLoadKVAH,
   };
 }
