@@ -1107,7 +1107,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                         <div>
                           <h3 className="font-semibold text-foreground">{req.id}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {req.utility} • {req.type} • {req.addressId}
+                            {req.utility} • {req.type} • {req.spaceId || req.addressId} • TAT: {Math.max(0, Math.floor((Date.now() - new Date(req.date).getTime()) / (1000 * 60 * 60 * 24)))} days
                           </p>
                         </div>
                       </div>
