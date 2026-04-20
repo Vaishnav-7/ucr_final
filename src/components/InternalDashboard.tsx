@@ -456,7 +456,55 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
           </motion.div>
         )}
 
-        {/* SPOC: My Customers panel */}
+        {/* P&E: SD Tariff Rate editor */}
+        {role === "pne" && showTariffEditor && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 mb-6 space-y-4">
+            <h2 className="text-xl font-bold font-display text-foreground flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary" />
+              Security Deposit Tariff Rate
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Used to auto-calculate Security Deposit when SPOC marks SD as "Yet to be Collected".
+              <br />
+              Formula: <span className="font-mono text-foreground">SD = Max Demand (kVAH) × {SD_DAYS} days × Tariff (₹/kVAH)</span>
+            </p>
+            <div className="flex items-end gap-3 max-w-md">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-foreground mb-1.5">Tariff Rate (₹ per kVAH)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="input-glass w-full"
+                  value={tariffDraft}
+                  onChange={(e) => { setTariffDraft(e.target.value); setTariffSaved(false); }}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Current: ₹{tariffRate}/kVAH</p>
+              </div>
+              <button
+                onClick={() => {
+                  const v = parseFloat(tariffDraft);
+                  if (Number.isFinite(v) && v > 0) {
+                    setTariffRate(v);
+                    setTariffSaved(true);
+                    setTimeout(() => setTariffSaved(false), 2000);
+                  }
+                }}
+                disabled={!tariffDraft || !(parseFloat(tariffDraft) > 0)}
+                className="btn-primary flex items-center gap-2 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" /> Save
+              </button>
+              <button onClick={() => setShowTariffEditor(false)} className="btn-secondary">Close</button>
+            </div>
+            {tariffSaved && (
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-success flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4" /> Tariff updated — applies to all new SD calculations
+              </motion.span>
+            )}
+          </motion.div>
+        )}
+
         {role === "spoc" && showMyCustomers && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
