@@ -408,15 +408,11 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Method:</span>
-                                <span className="ml-2 text-foreground capitalize">{req.loadData.method === "calculator" ? "AI Calculator" : "Document Upload"}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Total Load:</span>
-                                <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKW.toFixed(2)} kW</span>
+                                <span className="ml-2 text-foreground capitalize">{req.loadData.method === "calculator" ? "Load Calculator" : "Document Upload"}</span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Max Demand:</span>
-                                <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKVA.toFixed(2)} kVA</span>
+                                <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKVAH.toFixed(2)} kVAH</span>
                               </div>
                               {req.loadData.docUploaded && (
                                 <div>

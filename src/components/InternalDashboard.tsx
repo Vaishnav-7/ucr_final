@@ -184,7 +184,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
         if (req.loadData && action.fields) {
           const loadField = action.fields.find((f: any) => f.name === "details_of_load");
           if (loadField) {
-            loadField.autoValue = `${req.loadData.totalKW.toFixed(2)} kW / ${req.loadData.totalKVA.toFixed(2)} kVA`;
+            loadField.autoValue = `${req.loadData.totalKVAH.toFixed(2)} kVAH`;
           }
         }
       }
@@ -1297,15 +1297,22 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                                 </div>
                                 <div>
                                   <span className="text-muted-foreground">Method:</span>
-                                  <span className="ml-2 text-foreground capitalize">{req.loadData.method === "calculator" ? "AI Calculator" : "Document Upload"}</span>
+                                  <span className="ml-2 text-foreground capitalize">{req.loadData.method === "calculator" ? "Load Calculator" : "Document Upload"}</span>
                                 </div>
-                                <div>
-                                  <span className="text-muted-foreground">Total Load:</span>
-                                  <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKW.toFixed(2)} kW</span>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">Max Demand:</span>
-                                  <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKVA.toFixed(2)} kVA</span>
+                                <div className="flex items-center justify-between gap-2">
+                                  <div>
+                                    <span className="text-muted-foreground">Max Demand:</span>
+                                    <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKVAH.toFixed(2)} kVAH</span>
+                                  </div>
+                                  {role === "spoc" && (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setEditLoadReqId(req.id); setEditLoadValue(String(req.loadData?.totalKVAH ?? "")); }}
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+                                      title="Edit Max Demand"
+                                    >
+                                      <Pencil className="w-3 h-3" /> Edit
+                                    </button>
+                                  )}
                                 </div>
                                 {req.loadData.docUploaded && (
                                   <div>
