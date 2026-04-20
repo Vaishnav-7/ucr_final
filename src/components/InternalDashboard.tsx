@@ -1689,6 +1689,54 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
         )}
       </AnimatePresence>
 
+      {/* SPOC: Edit Load (Max Demand kVAH) Modal */}
+      <AnimatePresence>
+        {editLoadReqId && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => setEditLoadReqId(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative z-10 w-full max-w-md glass-card-elevated p-6">
+              <h3 className="text-lg font-bold font-display text-foreground mb-1 flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-primary" /> Edit Max Demand
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">{editLoadReqId}</p>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Max Demand (kVAH)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="input-glass w-full"
+                value={editLoadValue}
+                onChange={(e) => setEditLoadValue(e.target.value)}
+                placeholder="e.g. 360"
+                autoFocus
+              />
+              {editLoadValue && parseFloat(editLoadValue) > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  SD if pending: ₹{calculateSdAmount(parseFloat(editLoadValue), tariffRate).toLocaleString("en-IN")}
+                  <span className="ml-1">({parseFloat(editLoadValue).toFixed(2)} × {SD_DAYS} × {tariffRate})</span>
+                </p>
+              )}
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setEditLoadReqId(null)} className="btn-secondary flex-1">Cancel</button>
+                <button
+                  onClick={() => {
+                    const v = parseFloat(editLoadValue);
+                    if (!Number.isFinite(v) || v < 0 || !editLoadReqId) return;
+                    updateLoadKVAH(editLoadReqId, v);
+                    setEditLoadReqId(null);
+                    setEditLoadValue("");
+                  }}
+                  disabled={!editLoadValue || !(parseFloat(editLoadValue) >= 0)}
+                  className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                >
+                  Save
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Reject Modal */}
       <AnimatePresence>
         {rejectModalId && (
