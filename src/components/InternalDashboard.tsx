@@ -259,7 +259,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     { label: "Rejected", value: String(rejectedRequests.length), icon: <XCircle className="w-5 h-5" />, color: "text-destructive", bg: "bg-destructive/10", filter: "rejected" as DashFilter },
   ];
 
-  const spocDeptLabel = spocDept === "aero" ? "Aero" : spocDept === "non-aero" ? "Non-Aero" : null;
+  const spocDeptLabel = spocDept ? (DEPARTMENT_LABELS[spocDept] ?? null) : null;
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
