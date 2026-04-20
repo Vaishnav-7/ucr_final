@@ -1368,11 +1368,18 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                                 <div className="flex items-center justify-between gap-2">
                                   <div>
                                     <span className="text-muted-foreground">Max Demand:</span>
-                                    <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKVAH.toFixed(2)} kVAH</span>
+                                    <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKVA.toFixed(2)} kVA</span>
                                   </div>
                                   {role === "spoc" && (
                                     <button
-                                      onClick={(e) => { e.stopPropagation(); setEditLoadReqId(req.id); setEditLoadValue(String(req.loadData?.totalKVAH ?? "")); }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const kva = req.loadData?.totalKVA ?? 0;
+                                        const kvah = req.loadData?.totalKVAH ?? 0;
+                                        setEditLoadReqId(req.id);
+                                        setEditLoadKVA(String(kva || ""));
+                                        setEditLoadHours(kva > 0 && kvah > 0 ? String(+(kvah / kva).toFixed(2)) : "");
+                                      }}
                                       className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all"
                                       title="Edit Max Demand"
                                     >
@@ -1690,52 +1697,71 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
         )}
       </AnimatePresence>
 
-      {/* SPOC: Edit Load (Max Demand kVAH) Modal */}
+      {/* SPOC: Edit Load Modal — Max Demand (kVA) + Avg Hours/day, derives kVAH for SD */}
       <AnimatePresence>
-        {editLoadReqId && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => setEditLoadReqId(null)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative z-10 w-full max-w-md glass-card-elevated p-6">
-              <h3 className="text-lg font-bold font-display text-foreground mb-1 flex items-center gap-2">
-                <Pencil className="w-5 h-5 text-primary" /> Edit Max Demand
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">{editLoadReqId}</p>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Max Demand (kVAH)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className="input-glass w-full"
-                value={editLoadValue}
-                onChange={(e) => setEditLoadValue(e.target.value)}
-                placeholder="e.g. 360"
-                autoFocus
-              />
-              {editLoadValue && parseFloat(editLoadValue) > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  SD if pending: ₹{calculateSdAmount(parseFloat(editLoadValue), tariffRate).toLocaleString("en-IN")}
-                  <span className="ml-1">({parseFloat(editLoadValue).toFixed(2)} × {SD_DAYS} × {tariffRate})</span>
-                </p>
-              )}
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => setEditLoadReqId(null)} className="btn-secondary flex-1">Cancel</button>
-                <button
-                  onClick={() => {
-                    const v = parseFloat(editLoadValue);
-                    if (!Number.isFinite(v) || v < 0 || !editLoadReqId) return;
-                    updateLoadKVAH(editLoadReqId, v);
-                    setEditLoadReqId(null);
-                    setEditLoadValue("");
-                  }}
-                  disabled={!editLoadValue || !(parseFloat(editLoadValue) >= 0)}
-                  className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                >
-                  Save
-                </button>
-              </div>
+        {editLoadReqId && (() => {
+          const kvaNum = parseFloat(editLoadKVA) || 0;
+          const hoursNum = parseFloat(editLoadHours) || 0;
+          const derivedKVAH = kvaNum * hoursNum;
+          const canSave = kvaNum >= 0 && hoursNum >= 0 && (editLoadKVA !== "" || editLoadHours !== "");
+          return (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => setEditLoadReqId(null)} />
+              <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative z-10 w-full max-w-md glass-card-elevated p-6">
+                <h3 className="text-lg font-bold font-display text-foreground mb-1 flex items-center gap-2">
+                  <Pencil className="w-5 h-5 text-primary" /> Edit Load Details
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">{editLoadReqId}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">Max Demand (kVA)</label>
+                    <input
+                      type="number" min="0" step="0.01"
+                      className="input-glass w-full"
+                      value={editLoadKVA}
+                      onChange={(e) => setEditLoadKVA(e.target.value)}
+                      placeholder="e.g. 56.25"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">Avg Hours/day</label>
+                    <input
+                      type="number" min="0" max="24" step="0.5"
+                      className="input-glass w-full"
+                      value={editLoadHours}
+                      onChange={(e) => setEditLoadHours(e.target.value)}
+                      placeholder="e.g. 8"
+                    />
+                  </div>
+                </div>
+                {derivedKVAH > 0 && (
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Derived energy: {derivedKVAH.toFixed(2)} kVAH ({kvaNum.toFixed(2)} × {hoursNum})
+                    <br />
+                    SD if pending: ₹{calculateSdAmount(derivedKVAH, tariffRate).toLocaleString("en-IN")} ({derivedKVAH.toFixed(2)} × {SD_DAYS} × {tariffRate})
+                  </p>
+                )}
+                <div className="flex gap-3 mt-5">
+                  <button onClick={() => setEditLoadReqId(null)} className="btn-secondary flex-1">Cancel</button>
+                  <button
+                    onClick={() => {
+                      if (!editLoadReqId || !canSave) return;
+                      updateLoad(editLoadReqId, kvaNum, derivedKVAH);
+                      setEditLoadReqId(null);
+                      setEditLoadKVA("");
+                      setEditLoadHours("");
+                    }}
+                    disabled={!canSave}
+                    className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                  >
+                    Save
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
 
       {/* Reject Modal */}
