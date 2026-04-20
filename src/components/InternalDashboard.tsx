@@ -1548,7 +1548,15 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                 ]).map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() => setSdChoice(opt.value)}
+                    onClick={() => {
+                      setSdChoice(opt.value);
+                      if (opt.value === "pending") {
+                        const req = requests.find((r) => r.id === sdModalReqId);
+                        const kvah = req?.loadData?.totalKVAH ?? 0;
+                        const auto = calculateSdAmount(kvah, tariffRate);
+                        if (auto > 0) setSdAmountValue(String(auto));
+                      }
+                    }}
                     className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
                       sdChoice === opt.value ? opt.color + " ring-2 ring-primary" : "border-border hover:border-primary/20"
                     }`}
@@ -1570,6 +1578,16 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                     onChange={(e) => setSdAmountValue(e.target.value)}
                     min="0"
                   />
+                  {(() => {
+                    const req = requests.find((r) => r.id === sdModalReqId);
+                    const kvah = req?.loadData?.totalKVAH ?? 0;
+                    if (kvah <= 0) return null;
+                    return (
+                      <p className="text-xs text-muted-foreground mt-1.5">
+                        Auto-calculated: {kvah.toFixed(2)} kVAH × {SD_DAYS} days × ₹{tariffRate}/kVAH = ₹{calculateSdAmount(kvah, tariffRate).toLocaleString("en-IN")}
+                      </p>
+                    );
+                  })()}
                 </div>
               )}
 
