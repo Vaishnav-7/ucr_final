@@ -39,8 +39,8 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
   );
   const [docUploaded, setDocUploaded] = useState(false);
   const [loadDocFile, setLoadDocFile] = useState<File | null>(null);
-  const [manualKW, setManualKW] = useState("");
   const [manualKVA, setManualKVA] = useState("");
+  const [manualHours, setManualHours] = useState("");
 
   // Custom appliances
   const [customAppliances, setCustomAppliances] = useState<CustomAppliance[]>([]);
@@ -118,8 +118,12 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
   const missingHours = [...missingHoursDefault, ...missingHoursCustom];
   const hasHoursError = method === "calculator" && missingHours.length > 0;
 
-  const displayKW = method === "upload" && manualKW ? parseFloat(manualKW) || 0 : calcKW;
-  const displayKVAH = method === "upload" && manualKVA ? parseFloat(manualKVA) || 0 : calcKVAH;
+  const displayKVA = method === "upload" && manualKVA ? parseFloat(manualKVA) || 0 : calcKVA;
+  const displayKVAH =
+    method === "upload"
+      ? (parseFloat(manualKVA) || 0) * (parseFloat(manualHours) || 0)
+      : calcKVAH;
+  const uploadHoursMissing = method === "upload" && !!manualKVA && !(parseFloat(manualHours) > 0);
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl mx-auto">
