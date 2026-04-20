@@ -35,7 +35,7 @@ interface InternalDashboardProps {
   onLogout: () => void;
 }
 
-type DashFilter = "pending" | "all" | "completed";
+type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDashboardProps) => {
   const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad } = useRequestStore();
@@ -45,7 +45,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   const [rejectModalId, setRejectModalId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [dashFilter, setDashFilter] = useState<DashFilter>("pending");
+  const [dashFilter, setDashFilter] = useState<DashFilter>("action");
   const [searchQuery, setSearchQuery] = useState("");
   const [siteVisitReqId, setSiteVisitReqId] = useState<string | null>(null);
   const [siteVisitDate, setSiteVisitDate] = useState<Date | undefined>(undefined);
@@ -131,13 +131,13 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
   const visibleRequests = requests.filter(requestBelongsToMe);
 
-  // All requests where current stage belongs to this role and not completed
+  // All requests where current stage belongs to this role and not completed → "Take Action"
   const myPendingRequests = visibleRequests.filter((r) => {
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
     const stageRole = STAGE_ROLE_MAP[stage.id];
     const stages = getWorkflowStages(r.workflowType);
     const isCompleted = r.stageIndex >= stages.length - 1;
-    return stageRole === role && !isCompleted;
+    return stageRole === role && !isCompleted && !r.rejectionReason;
   });
 
   const completedRequests = visibleRequests.filter((r) => {
@@ -145,9 +145,22 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     return r.stageIndex >= stages.length - 1;
   });
 
+  const rejectedRequests = visibleRequests.filter((r) => !!r.rejectionReason);
+
+  const inProgressRequests = visibleRequests.filter((r) => {
+    const stages = getWorkflowStages(r.workflowType);
+    const stage = getCurrentStage(r.workflowType, r.stageIndex);
+    const stageRole = STAGE_ROLE_MAP[stage.id];
+    const isCompleted = r.stageIndex >= stages.length - 1;
+    // Active but not awaiting this role's action and not rejected
+    return !isCompleted && !r.rejectionReason && stageRole !== role;
+  });
+
   const baseDisplayRequests =
-    dashFilter === "pending" ? myPendingRequests :
-    dashFilter === "completed" ? completedRequests :
+    dashFilter === "action" ? myPendingRequests :
+    dashFilter === "progress" ? inProgressRequests :
+    dashFilter === "approved" ? completedRequests :
+    dashFilter === "rejected" ? rejectedRequests :
     visibleRequests;
 
   const searchQ = searchQuery.trim().toLowerCase();
@@ -239,9 +252,11 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   };
 
   const stats = [
-    { label: "Pending Actions", value: String(myPendingRequests.length), icon: <Clock className="w-5 h-5" />, color: "text-warning", bg: "bg-warning/10", filter: "pending" as DashFilter },
-    { label: "All Requests", value: String(visibleRequests.length), icon: <BarChart3 className="w-5 h-5" />, color: "text-primary", bg: "bg-primary/10", filter: "all" as DashFilter },
-    { label: "Completed", value: String(completedRequests.length), icon: <CheckCircle2 className="w-5 h-5" />, color: "text-success", bg: "bg-success/10", filter: "completed" as DashFilter },
+    { label: "Total Requests", value: String(visibleRequests.length), icon: <BarChart3 className="w-5 h-5" />, color: "text-primary", bg: "bg-primary/10", filter: "all" as DashFilter },
+    { label: "Take Action", value: String(myPendingRequests.length), icon: <AlertCircle className="w-5 h-5" />, color: "text-accent", bg: "bg-accent/10", filter: "action" as DashFilter },
+    { label: "In Progress", value: String(inProgressRequests.length), icon: <Clock className="w-5 h-5" />, color: "text-warning", bg: "bg-warning/10", filter: "progress" as DashFilter },
+    { label: "Approved", value: String(completedRequests.length), icon: <CheckCircle2 className="w-5 h-5" />, color: "text-success", bg: "bg-success/10", filter: "approved" as DashFilter },
+    { label: "Rejected", value: String(rejectedRequests.length), icon: <XCircle className="w-5 h-5" />, color: "text-destructive", bg: "bg-destructive/10", filter: "rejected" as DashFilter },
   ];
 
   const spocDeptLabel = spocDept === "aero" ? "Aero" : spocDept === "non-aero" ? "Non-Aero" : null;
