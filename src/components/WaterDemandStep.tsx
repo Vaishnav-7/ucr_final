@@ -69,7 +69,7 @@ const WaterDemandStep = ({ onNext, onBack }: WaterDemandStepProps) => {
         ))}
       </div>
 
-      {/* Summary */}
+      {/* Summary - Individual demands only */}
       <motion.div
         initial={false}
         animate={{ scale: totalKL > 0 ? 1 : 0.98, opacity: totalKL > 0 ? 1 : 0.6 }}
@@ -81,7 +81,7 @@ const WaterDemandStep = ({ onNext, onBack }: WaterDemandStepProps) => {
           </div>
           <h3 className="text-lg font-semibold text-foreground">Demand Summary</h3>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {CATEGORIES.map((cat) => (
             <div key={cat.key} className="p-3 rounded-xl bg-muted">
               <p className="text-xs text-muted-foreground">{cat.label}</p>
@@ -91,13 +91,6 @@ const WaterDemandStep = ({ onNext, onBack }: WaterDemandStepProps) => {
               </p>
             </div>
           ))}
-          <div className="p-3 rounded-xl bg-info/10 border border-info/20">
-            <p className="text-xs text-info font-medium">Total Daily</p>
-            <p className="text-xl font-bold font-display text-foreground">
-              {totalKL.toFixed(1)}
-              <span className="text-xs font-normal text-muted-foreground ml-1">KL/day</span>
-            </p>
-          </div>
         </div>
       </motion.div>
 
