@@ -1120,12 +1120,21 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                     <div className="flex items-center gap-1 mb-1">
                       {stages.map((stage, si) => (
                         <div key={stage.id} className="flex items-center flex-1 last:flex-none">
-                          <div
-                            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-colors ${
-                              si <= req.stageIndex ? "bg-primary" : "bg-muted"
-                            }`}
-                            title={stage.label}
-                          />
+                          {req.rejectedFromStageId === stage.id ? (
+                            <div
+                              className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-destructive flex items-center justify-center text-destructive-foreground"
+                              title={`${stage.label} — Rejected`}
+                            >
+                              <X className="w-2 h-2" strokeWidth={3} />
+                            </div>
+                          ) : (
+                            <div
+                              className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-colors ${
+                                si <= req.stageIndex ? "bg-primary" : "bg-muted"
+                              }`}
+                              title={stage.label}
+                            />
+                          )}
                           {si < stages.length - 1 && (
                             <div className={`flex-1 h-0.5 mx-0.5 rounded ${
                               si < req.stageIndex ? "bg-primary" : "bg-muted"
