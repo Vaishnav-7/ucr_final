@@ -359,7 +359,7 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
       <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-3 mt-8">
         <button onClick={onBack} className="btn-secondary flex items-center justify-center gap-2"><ArrowLeft className="w-4 h-4" /> Back</button>
         <button
-          onClick={() => onNext({ method, quantities, kwValues, totalKW: displayKW, totalKVA: displayKVA, docUploaded, customAppliances, loadDocFile })}
+          onClick={() => onNext({ method, quantities, kwValues, hoursValues, totalKW: displayKW, totalKVA: displayKVA, docUploaded, customAppliances, loadDocFile })}
           className="btn-accent flex items-center justify-center gap-2 text-lg px-8 py-4 sm:w-auto w-full"
         >
           <Send className="w-5 h-5" /> Submit Request
