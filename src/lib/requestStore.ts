@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { getWorkflowStages } from "./workflows";
 import type { WorkflowType } from "./workflows";
+import type { PowerMeterRow } from "./meterRecommendationStore";
 
 export interface RequestUserDetails {
   customerName?: string;
@@ -71,6 +72,8 @@ export interface ConnectionRequest {
   extensionRequest?: ExtensionRequest;
   /** ID of the workflow stage at which the request was rejected (cleared once it advances past that stage again). */
   rejectedFromStageId?: string;
+  /** Meter chosen by the customer from the P&E recommendations (Power workflows). */
+  selectedMeter?: PowerMeterRow;
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [
@@ -337,6 +340,13 @@ export function useRequestStore() {
     notify();
   }, []);
 
+  const selectPowerMeter = useCallback((requestId: string, meter: PowerMeterRow) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId ? { ...r, selectedMeter: meter } : r
+    );
+    notify();
+  }, []);
+
   return {
     requests: globalRequests,
     advanceStage,
@@ -352,5 +362,6 @@ export function useRequestStore() {
     deactivateConnection,
     updateRequestAddress,
     updateLoad,
+    selectPowerMeter,
   };
 }
