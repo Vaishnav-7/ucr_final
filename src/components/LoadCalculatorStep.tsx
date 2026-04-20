@@ -23,6 +23,7 @@ interface CustomAppliance {
   name: string;
   kw: number;
   qty: number;
+  hours: number;
 }
 
 const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
@@ -58,12 +59,17 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
     setKwValues((prev) => ({ ...prev, [name]: isNaN(num) ? 0 : num }));
   };
 
+  const updateHours = (name: string, value: string) => {
+    const num = parseFloat(value);
+    setHoursValues((prev) => ({ ...prev, [name]: isNaN(num) ? 0 : num }));
+  };
+
   const addCustomAppliance = () => {
     const kw = parseFloat(newKW);
     if (!newName.trim() || isNaN(kw) || kw <= 0) return;
     setCustomAppliances((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), name: newName.trim(), kw, qty: 1 },
+      { id: crypto.randomUUID(), name: newName.trim(), kw, qty: 1, hours: 0 },
     ]);
     setNewName("");
     setNewKW("");
