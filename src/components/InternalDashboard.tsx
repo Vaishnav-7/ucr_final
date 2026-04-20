@@ -38,7 +38,7 @@ interface InternalDashboardProps {
 type DashFilter = "pending" | "all" | "completed";
 
 const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoadKVAH } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad } = useRequestStore();
   const ccStore = useCcRequestStore();
   const customerStore = useCustomerStore();
   const { getDocumentsForRequest } = useDocumentStore();
@@ -72,9 +72,10 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   const [editAddrValue, setEditAddrValue] = useState("");
   const [editSpaceIdValue, setEditSpaceIdValue] = useState("");
 
-  // SPOC load editing (Max Demand kVAH)
+  // SPOC load editing (Max Demand kVA + Avg Hours/day → derives kVAH)
   const [editLoadReqId, setEditLoadReqId] = useState<string | null>(null);
-  const [editLoadValue, setEditLoadValue] = useState("");
+  const [editLoadKVA, setEditLoadKVA] = useState("");
+  const [editLoadHours, setEditLoadHours] = useState("");
 
   // P&E tariff editor
   const [showTariffEditor, setShowTariffEditor] = useState(false);
