@@ -300,6 +300,12 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                 >
                   <Settings className="w-4 h-4" /> Meter Recommendation
                 </button>
+                <button
+                  onClick={() => { setShowTariffEditor(!showTariffEditor); setTariffDraft(String(tariffRate)); setTariffSaved(false); }}
+                  className="btn-secondary flex items-center gap-2 text-sm"
+                >
+                  <Settings className="w-4 h-4" /> SD Tariff Rate
+                </button>
               </>
             )}
             {role === "finance" && (
