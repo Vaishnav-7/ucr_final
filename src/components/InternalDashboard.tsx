@@ -35,7 +35,7 @@ interface InternalDashboardProps {
   onLogout: () => void;
 }
 
-type DashFilter = "pending" | "all" | "completed";
+type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDashboardProps) => {
   const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad } = useRequestStore();
@@ -45,7 +45,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   const [rejectModalId, setRejectModalId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [dashFilter, setDashFilter] = useState<DashFilter>("pending");
+  const [dashFilter, setDashFilter] = useState<DashFilter>("action");
   const [searchQuery, setSearchQuery] = useState("");
   const [siteVisitReqId, setSiteVisitReqId] = useState<string | null>(null);
   const [siteVisitDate, setSiteVisitDate] = useState<Date | undefined>(undefined);
@@ -131,13 +131,13 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
   const visibleRequests = requests.filter(requestBelongsToMe);
 
-  // All requests where current stage belongs to this role and not completed
+  // All requests where current stage belongs to this role and not completed → "Take Action"
   const myPendingRequests = visibleRequests.filter((r) => {
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
     const stageRole = STAGE_ROLE_MAP[stage.id];
     const stages = getWorkflowStages(r.workflowType);
     const isCompleted = r.stageIndex >= stages.length - 1;
-    return stageRole === role && !isCompleted;
+    return stageRole === role && !isCompleted && !r.rejectionReason;
   });
 
   const completedRequests = visibleRequests.filter((r) => {
@@ -145,9 +145,22 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     return r.stageIndex >= stages.length - 1;
   });
 
+  const rejectedRequests = visibleRequests.filter((r) => !!r.rejectionReason);
+
+  const inProgressRequests = visibleRequests.filter((r) => {
+    const stages = getWorkflowStages(r.workflowType);
+    const stage = getCurrentStage(r.workflowType, r.stageIndex);
+    const stageRole = STAGE_ROLE_MAP[stage.id];
+    const isCompleted = r.stageIndex >= stages.length - 1;
+    // Active but not awaiting this role's action and not rejected
+    return !isCompleted && !r.rejectionReason && stageRole !== role;
+  });
+
   const baseDisplayRequests =
-    dashFilter === "pending" ? myPendingRequests :
-    dashFilter === "completed" ? completedRequests :
+    dashFilter === "action" ? myPendingRequests :
+    dashFilter === "progress" ? inProgressRequests :
+    dashFilter === "approved" ? completedRequests :
+    dashFilter === "rejected" ? rejectedRequests :
     visibleRequests;
 
   const searchQ = searchQuery.trim().toLowerCase();
@@ -239,9 +252,11 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   };
 
   const stats = [
-    { label: "Pending Actions", value: String(myPendingRequests.length), icon: <Clock className="w-5 h-5" />, color: "text-warning", bg: "bg-warning/10", filter: "pending" as DashFilter },
-    { label: "All Requests", value: String(visibleRequests.length), icon: <BarChart3 className="w-5 h-5" />, color: "text-primary", bg: "bg-primary/10", filter: "all" as DashFilter },
-    { label: "Completed", value: String(completedRequests.length), icon: <CheckCircle2 className="w-5 h-5" />, color: "text-success", bg: "bg-success/10", filter: "completed" as DashFilter },
+    { label: "Total Requests", value: String(visibleRequests.length), icon: <BarChart3 className="w-5 h-5" />, color: "text-primary", bg: "bg-primary/10", filter: "all" as DashFilter },
+    { label: "Take Action", value: String(myPendingRequests.length), icon: <AlertCircle className="w-5 h-5" />, color: "text-accent", bg: "bg-accent/10", filter: "action" as DashFilter },
+    { label: "In Progress", value: String(inProgressRequests.length), icon: <Clock className="w-5 h-5" />, color: "text-warning", bg: "bg-warning/10", filter: "progress" as DashFilter },
+    { label: "Approved", value: String(completedRequests.length), icon: <CheckCircle2 className="w-5 h-5" />, color: "text-success", bg: "bg-success/10", filter: "approved" as DashFilter },
+    { label: "Rejected", value: String(rejectedRequests.length), icon: <XCircle className="w-5 h-5" />, color: "text-destructive", bg: "bg-destructive/10", filter: "rejected" as DashFilter },
   ];
 
   const spocDeptLabel = spocDept === "aero" ? "Aero" : spocDept === "non-aero" ? "Non-Aero" : null;
@@ -324,21 +339,21 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
         </div>
 
         {/* Stats as filter buttons */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           {stats.map((stat, i) => (
             <motion.button
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.05 }}
               onClick={() => setDashFilter(stat.filter)}
-              className={`glass-card p-5 text-left transition-all ${dashFilter === stat.filter ? "ring-2 ring-primary" : "hover:ring-1 hover:ring-border"}`}
+              className={`glass-card p-4 text-left transition-all ${dashFilter === stat.filter ? "ring-2 ring-primary" : "hover:ring-1 hover:ring-border"}`}
             >
-              <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center ${stat.color} mb-3`}>
+              <div className={`w-9 h-9 rounded-xl ${stat.bg} flex items-center justify-center ${stat.color} mb-2`}>
                 {stat.icon}
               </div>
               <p className="text-2xl font-bold font-display text-foreground">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
             </motion.button>
           ))}
         </div>
@@ -1050,12 +1065,14 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
         {/* Request List */}
         <div className="glass-card p-6">
-          <h2 className="text-xl font-bold font-display text-foreground mb-6 capitalize">{dashFilter === "all" ? "All" : dashFilter} Requests</h2>
+          <h2 className="text-xl font-bold font-display text-foreground mb-6">
+            {stats.find((s) => s.filter === dashFilter)?.label ?? "Requests"}
+          </h2>
 
           {displayRequests.length === 0 ? (
             <div className="text-center py-12">
               <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-3" />
-              <p className="text-muted-foreground">No {dashFilter} requests. All caught up!</p>
+              <p className="text-muted-foreground">No requests to show. All caught up!</p>
             </div>
           ) : (
             <div className="space-y-4">

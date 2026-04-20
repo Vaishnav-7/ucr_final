@@ -18,7 +18,7 @@ interface ConnectionDashboardProps {
   onLogout?: () => void;
 }
 
-type DashFilter = "active" | "pending" | "completed";
+type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProps) => {
   const { requests, advanceStage, markActionCompleted, clearRejection, requestExtension, deactivateConnection } = useRequestStore();
@@ -26,7 +26,7 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
   const [modalOpen, setModalOpen] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<WorkflowAction | null>(null);
-  const [dashFilter, setDashFilter] = useState<DashFilter>("active");
+  const [dashFilter, setDashFilter] = useState<DashFilter>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [meterRecsOpen, setMeterRecsOpen] = useState<string | null>(null);
@@ -82,31 +82,36 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
   };
 
   // Compute counts dynamically
-  const completedRequests = requests.filter((r) => {
+  const approvedRequests = requests.filter((r) => {
     const stages = getWorkflowStages(r.workflowType);
     return r.stageIndex >= stages.length - 1;
   });
-  const pendingRequests = requests.filter((r) => {
+  const rejectedRequests = requests.filter((r) => !!r.rejectionReason);
+  const actionRequests = requests.filter((r) => {
     const stages = getWorkflowStages(r.workflowType);
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
-    return r.stageIndex < stages.length - 1 && stage.userActionRequired;
+    return r.stageIndex < stages.length - 1 && stage.userActionRequired && !r.rejectionReason;
   });
-  const activeRequests = requests.filter((r) => {
+  const progressRequests = requests.filter((r) => {
     const stages = getWorkflowStages(r.workflowType);
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
-    return r.stageIndex < stages.length - 1 && !stage.userActionRequired;
+    return r.stageIndex < stages.length - 1 && !stage.userActionRequired && !r.rejectionReason;
   });
 
   const stats = [
-    { label: "Active Requests", value: String(activeRequests.length), icon: <CheckCircle2 className="w-5 h-5" />, color: "text-success", bg: "bg-success/10", filter: "active" as DashFilter },
-    { label: "Pending Requests", value: String(pendingRequests.length), icon: <Clock className="w-5 h-5" />, color: "text-warning", bg: "bg-warning/10", filter: "pending" as DashFilter },
-    { label: "Completed", value: String(completedRequests.length), icon: <BarChart3 className="w-5 h-5" />, color: "text-primary", bg: "bg-primary/10", filter: "completed" as DashFilter },
+    { label: "Total Requests", value: String(requests.length), icon: <BarChart3 className="w-5 h-5" />, color: "text-primary", bg: "bg-primary/10", filter: "all" as DashFilter },
+    { label: "Take Action", value: String(actionRequests.length), icon: <AlertTriangle className="w-5 h-5" />, color: "text-accent", bg: "bg-accent/10", filter: "action" as DashFilter },
+    { label: "In Progress", value: String(progressRequests.length), icon: <Clock className="w-5 h-5" />, color: "text-warning", bg: "bg-warning/10", filter: "progress" as DashFilter },
+    { label: "Approved", value: String(approvedRequests.length), icon: <CheckCircle2 className="w-5 h-5" />, color: "text-success", bg: "bg-success/10", filter: "approved" as DashFilter },
+    { label: "Rejected", value: String(rejectedRequests.length), icon: <XCircle className="w-5 h-5" />, color: "text-destructive", bg: "bg-destructive/10", filter: "rejected" as DashFilter },
   ];
 
   const baseFiltered =
-    dashFilter === "active" ? activeRequests :
-    dashFilter === "pending" ? pendingRequests :
-    completedRequests;
+    dashFilter === "all" ? requests :
+    dashFilter === "action" ? actionRequests :
+    dashFilter === "progress" ? progressRequests :
+    dashFilter === "approved" ? approvedRequests :
+    rejectedRequests;
 
   const q = searchQuery.trim().toLowerCase();
   const filteredRequests = q
@@ -163,21 +168,21 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
       </div>
 
       {/* Stats as filter buttons */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         {stats.map((stat, i) => (
           <motion.button
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
+            transition={{ delay: i * 0.05 }}
             onClick={() => setDashFilter(stat.filter)}
-            className={`glass-card p-5 text-left transition-all ${dashFilter === stat.filter ? "ring-2 ring-primary" : "hover:ring-1 hover:ring-border"}`}
+            className={`glass-card p-4 text-left transition-all ${dashFilter === stat.filter ? "ring-2 ring-primary" : "hover:ring-1 hover:ring-border"}`}
           >
-            <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center ${stat.color} mb-3`}>
+            <div className={`w-9 h-9 rounded-xl ${stat.bg} flex items-center justify-center ${stat.color} mb-2`}>
               {stat.icon}
             </div>
             <p className="text-2xl font-bold font-display text-foreground">{stat.value}</p>
-            <p className="text-sm text-muted-foreground">{stat.label}</p>
+            <p className="text-xs text-muted-foreground">{stat.label}</p>
           </motion.button>
         ))}
       </div>
@@ -185,13 +190,15 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
       {/* Requests */}
       <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold font-display text-foreground capitalize">{dashFilter} Requests</h2>
+          <h2 className="text-xl font-bold font-display text-foreground">
+            {stats.find((s) => s.filter === dashFilter)?.label ?? "Requests"}
+          </h2>
         </div>
 
         {filteredRequests.length === 0 ? (
           <div className="text-center py-12">
             <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-3" />
-            <p className="text-muted-foreground">No {dashFilter} requests.</p>
+            <p className="text-muted-foreground">No requests to show.</p>
           </div>
         ) : (
           <div className="space-y-4">
