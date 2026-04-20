@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Upload, CheckCircle2, MapPin, Plus, Home, ChevronDown } from "lucide-react";
 import { getSavedAddresses, addSavedAddress, type SavedAddress } from "@/lib/addressStore";
+import { DEPARTMENT_OPTIONS } from "@/lib/customerStore";
 
 interface SpaceDocumentStepProps {
   onNext: (data: any) => void;
