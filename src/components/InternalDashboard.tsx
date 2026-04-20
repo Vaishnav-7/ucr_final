@@ -26,6 +26,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from ".
 import { useEffect } from "react";
 import { SPOC_DEPARTMENT_MAP } from "./LoginStep";
 import { useCustomerStore, type Customer, type Department } from "@/lib/customerStore";
+import { useTariffRate, setTariffRate, calculateSdAmount, SD_DAYS } from "@/lib/tariffStore";
 
 interface InternalDashboardProps {
   role: UserRole;
@@ -37,7 +38,7 @@ interface InternalDashboardProps {
 type DashFilter = "pending" | "all" | "completed";
 
 const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoadKVAH } = useRequestStore();
   const ccStore = useCcRequestStore();
   const customerStore = useCustomerStore();
   const { getDocumentsForRequest } = useDocumentStore();
@@ -70,6 +71,16 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   const [editAddrReqId, setEditAddrReqId] = useState<string | null>(null);
   const [editAddrValue, setEditAddrValue] = useState("");
   const [editSpaceIdValue, setEditSpaceIdValue] = useState("");
+
+  // SPOC load editing (Max Demand kVAH)
+  const [editLoadReqId, setEditLoadReqId] = useState<string | null>(null);
+  const [editLoadValue, setEditLoadValue] = useState("");
+
+  // P&E tariff editor
+  const [showTariffEditor, setShowTariffEditor] = useState(false);
+  const [tariffDraft, setTariffDraft] = useState<string>("");
+  const [tariffSaved, setTariffSaved] = useState(false);
+  const tariffRate = useTariffRate();
 
   // CC approval state (finance only)
   const [ccExpandedId, setCcExpandedId] = useState<string | null>(null);
@@ -184,7 +195,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
         if (req.loadData && action.fields) {
           const loadField = action.fields.find((f: any) => f.name === "details_of_load");
           if (loadField) {
-            loadField.autoValue = `${req.loadData.totalKW.toFixed(2)} kW / ${req.loadData.totalKVA.toFixed(2)} kVA`;
+            loadField.autoValue = `${req.loadData.totalKVAH.toFixed(2)} kVAH`;
           }
         }
       }
@@ -288,6 +299,12 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                   className="btn-secondary flex items-center gap-2 text-sm"
                 >
                   <Settings className="w-4 h-4" /> Meter Recommendation
+                </button>
+                <button
+                  onClick={() => { setShowTariffEditor(!showTariffEditor); setTariffDraft(String(tariffRate)); setTariffSaved(false); }}
+                  className="btn-secondary flex items-center gap-2 text-sm"
+                >
+                  <Settings className="w-4 h-4" /> SD Tariff Rate
                 </button>
               </>
             )}
@@ -439,7 +456,55 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
           </motion.div>
         )}
 
-        {/* SPOC: My Customers panel */}
+        {/* P&E: SD Tariff Rate editor */}
+        {role === "pne" && showTariffEditor && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 mb-6 space-y-4">
+            <h2 className="text-xl font-bold font-display text-foreground flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary" />
+              Security Deposit Tariff Rate
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Used to auto-calculate Security Deposit when SPOC marks SD as "Yet to be Collected".
+              <br />
+              Formula: <span className="font-mono text-foreground">SD = Max Demand (kVAH) × {SD_DAYS} days × Tariff (₹/kVAH)</span>
+            </p>
+            <div className="flex items-end gap-3 max-w-md">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-foreground mb-1.5">Tariff Rate (₹ per kVAH)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="input-glass w-full"
+                  value={tariffDraft}
+                  onChange={(e) => { setTariffDraft(e.target.value); setTariffSaved(false); }}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Current: ₹{tariffRate}/kVAH</p>
+              </div>
+              <button
+                onClick={() => {
+                  const v = parseFloat(tariffDraft);
+                  if (Number.isFinite(v) && v > 0) {
+                    setTariffRate(v);
+                    setTariffSaved(true);
+                    setTimeout(() => setTariffSaved(false), 2000);
+                  }
+                }}
+                disabled={!tariffDraft || !(parseFloat(tariffDraft) > 0)}
+                className="btn-primary flex items-center gap-2 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" /> Save
+              </button>
+              <button onClick={() => setShowTariffEditor(false)} className="btn-secondary">Close</button>
+            </div>
+            {tariffSaved && (
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-success flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4" /> Tariff updated — applies to all new SD calculations
+              </motion.span>
+            )}
+          </motion.div>
+        )}
+
         {role === "spoc" && showMyCustomers && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -1297,15 +1362,22 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                                 </div>
                                 <div>
                                   <span className="text-muted-foreground">Method:</span>
-                                  <span className="ml-2 text-foreground capitalize">{req.loadData.method === "calculator" ? "AI Calculator" : "Document Upload"}</span>
+                                  <span className="ml-2 text-foreground capitalize">{req.loadData.method === "calculator" ? "Load Calculator" : "Document Upload"}</span>
                                 </div>
-                                <div>
-                                  <span className="text-muted-foreground">Total Load:</span>
-                                  <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKW.toFixed(2)} kW</span>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">Max Demand:</span>
-                                  <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKVA.toFixed(2)} kVA</span>
+                                <div className="flex items-center justify-between gap-2">
+                                  <div>
+                                    <span className="text-muted-foreground">Max Demand:</span>
+                                    <span className="ml-2 text-foreground font-semibold">{req.loadData.totalKVAH.toFixed(2)} kVAH</span>
+                                  </div>
+                                  {role === "spoc" && (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setEditLoadReqId(req.id); setEditLoadValue(String(req.loadData?.totalKVAH ?? "")); }}
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+                                      title="Edit Max Demand"
+                                    >
+                                      <Pencil className="w-3 h-3" /> Edit
+                                    </button>
+                                  )}
                                 </div>
                                 {req.loadData.docUploaded && (
                                   <div>
@@ -1530,7 +1602,15 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                 ]).map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() => setSdChoice(opt.value)}
+                    onClick={() => {
+                      setSdChoice(opt.value);
+                      if (opt.value === "pending") {
+                        const req = requests.find((r) => r.id === sdModalReqId);
+                        const kvah = req?.loadData?.totalKVAH ?? 0;
+                        const auto = calculateSdAmount(kvah, tariffRate);
+                        if (auto > 0) setSdAmountValue(String(auto));
+                      }
+                    }}
                     className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
                       sdChoice === opt.value ? opt.color + " ring-2 ring-primary" : "border-border hover:border-primary/20"
                     }`}
@@ -1552,6 +1632,16 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                     onChange={(e) => setSdAmountValue(e.target.value)}
                     min="0"
                   />
+                  {(() => {
+                    const req = requests.find((r) => r.id === sdModalReqId);
+                    const kvah = req?.loadData?.totalKVAH ?? 0;
+                    if (kvah <= 0) return null;
+                    return (
+                      <p className="text-xs text-muted-foreground mt-1.5">
+                        Auto-calculated: {kvah.toFixed(2)} kVAH × {SD_DAYS} days × ₹{tariffRate}/kVAH = ₹{calculateSdAmount(kvah, tariffRate).toLocaleString("en-IN")}
+                      </p>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -1592,6 +1682,54 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                   className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
                 >
                   Confirm
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* SPOC: Edit Load (Max Demand kVAH) Modal */}
+      <AnimatePresence>
+        {editLoadReqId && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => setEditLoadReqId(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative z-10 w-full max-w-md glass-card-elevated p-6">
+              <h3 className="text-lg font-bold font-display text-foreground mb-1 flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-primary" /> Edit Max Demand
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">{editLoadReqId}</p>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Max Demand (kVAH)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="input-glass w-full"
+                value={editLoadValue}
+                onChange={(e) => setEditLoadValue(e.target.value)}
+                placeholder="e.g. 360"
+                autoFocus
+              />
+              {editLoadValue && parseFloat(editLoadValue) > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  SD if pending: ₹{calculateSdAmount(parseFloat(editLoadValue), tariffRate).toLocaleString("en-IN")}
+                  <span className="ml-1">({parseFloat(editLoadValue).toFixed(2)} × {SD_DAYS} × {tariffRate})</span>
+                </p>
+              )}
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setEditLoadReqId(null)} className="btn-secondary flex-1">Cancel</button>
+                <button
+                  onClick={() => {
+                    const v = parseFloat(editLoadValue);
+                    if (!Number.isFinite(v) || v < 0 || !editLoadReqId) return;
+                    updateLoadKVAH(editLoadReqId, v);
+                    setEditLoadReqId(null);
+                    setEditLoadValue("");
+                  }}
+                  disabled={!editLoadValue || !(parseFloat(editLoadValue) >= 0)}
+                  className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                >
+                  Save
                 </button>
               </div>
             </motion.div>

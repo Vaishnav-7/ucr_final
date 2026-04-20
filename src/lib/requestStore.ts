@@ -21,7 +21,10 @@ export interface LoadAppliance {
 export interface LoadData {
   method: "calculator" | "upload";
   totalKW: number;
-  totalKVA: number;
+  /** Maximum demand in kVAH (kW × hours / power factor). Primary metric. */
+  totalKVAH: number;
+  /** @deprecated kept for legacy seed data; use totalKVAH. */
+  totalKVA?: number;
   appliances?: LoadAppliance[];
   docUploaded?: boolean;
 }
@@ -74,14 +77,14 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     address: "Tower A, Block 4, Cyber City", addressId: "ADDR-S001", stageIndex: 9, date: "2023-11-10",
     siteVisitDate: "15 January 2024",
     userDetails: { customerName: "Acme Corp", customerCode: "CC-1001", contactPerson: "Rahul Sharma", mobile: "9876543210", email: "rahul@acme.com" },
-    sdDecision: "collected", loadData: { method: "calculator", totalKW: 45, totalKVA: 56.25, appliances: [] },
+    sdDecision: "collected", loadData: { method: "calculator", totalKW: 45, totalKVAH: 360, appliances: [] },
   },
   {
     id: "REQ-2024-102", utility: "Power", type: "Temporary", workflowType: "power-temporary",
     address: "Plot 7, Industrial Area Phase-II", addressId: "ADDR-S003", stageIndex: 8, date: "2023-12-01", expiry: "2024-06-01",
     siteVisitDate: "20 February 2024",
     userDetails: { customerName: "BuildRight Infra", customerCode: "CC-2045", contactPerson: "Priya Nair", mobile: "9123456780", email: "priya@buildright.in" },
-    sdDecision: "pending", sdAmount: "25000", loadData: { method: "upload", totalKW: 120, totalKVA: 150, docUploaded: true },
+    sdDecision: "pending", sdAmount: "25000", loadData: { method: "upload", totalKW: 120, totalKVAH: 1200, docUploaded: true },
   },
   {
     id: "REQ-2024-103", utility: "Power", type: "Prepaid", workflowType: "power-prepaid",
@@ -304,6 +307,16 @@ export function useRequestStore() {
     notify();
   }, []);
 
+  /** SPOC can edit the load (Max Demand in kVAH) on a submitted request */
+  const updateLoadKVAH = useCallback((requestId: string, totalKVAH: number) => {
+    globalRequests = globalRequests.map((r) => {
+      if (r.id !== requestId) return r;
+      const existing: LoadData = r.loadData ?? { method: "upload", totalKW: 0, totalKVAH: 0 };
+      return { ...r, loadData: { ...existing, totalKVAH } };
+    });
+    notify();
+  }, []);
+
   return {
     requests: globalRequests,
     advanceStage,
@@ -318,5 +331,6 @@ export function useRequestStore() {
     rejectExtension,
     deactivateConnection,
     updateRequestAddress,
+    updateLoadKVAH,
   };
 }
