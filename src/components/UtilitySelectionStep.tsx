@@ -57,7 +57,7 @@ const UtilitySelectionStep = ({ onNext, onBack }: UtilitySelectionStepProps) => 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold font-display text-foreground">Utility & Connection Type</h2>
+        <h2 className="text-2xl font-bold font-display text-foreground">Utility Connection Type</h2>
         <p className="text-muted-foreground mt-1">Choose what you need and the type of connection</p>
       </div>
 
@@ -74,7 +74,6 @@ const UtilitySelectionStep = ({ onNext, onBack }: UtilitySelectionStepProps) => 
             <Zap className={`w-8 h-8 ${selectedUtilities.includes("power") ? "text-primary-foreground" : "text-primary"}`} />
           </div>
           <h3 className="text-xl font-bold font-display text-foreground">Power</h3>
-          <p className="text-sm text-muted-foreground mt-2">Electrical connection for your space</p>
         </button>
 
         <button
@@ -89,7 +88,6 @@ const UtilitySelectionStep = ({ onNext, onBack }: UtilitySelectionStepProps) => 
             <Droplets className={`w-8 h-8 ${selectedUtilities.includes("water") ? "text-info-foreground" : "text-info"}`} />
           </div>
           <h3 className="text-xl font-bold font-display text-foreground">Water</h3>
-          <p className="text-sm text-muted-foreground mt-2">Domestic & flushing water supply</p>
         </button>
       </div>
 
