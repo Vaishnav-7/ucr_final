@@ -1107,7 +1107,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                         <div>
                           <h3 className="font-semibold text-foreground">{req.id}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {req.utility} • {req.type} • {req.addressId}
+                            {req.utility} • {req.type} • {req.spaceId || req.addressId} • TAT: {Math.max(0, Math.floor((Date.now() - new Date(req.date).getTime()) / (1000 * 60 * 60 * 24)))} days
                           </p>
                         </div>
                       </div>
@@ -1231,17 +1231,6 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                                         <span className="text-muted-foreground">Address:</span>
                                         <span className="ml-2 text-foreground">{req.address} ({req.addressId})</span>
                                       </div>
-                                      {req.spaceId && (
-                                        <div className="mt-1 flex items-center gap-4">
-                                          <span>
-                                            <span className="text-muted-foreground">Space ID:</span>
-                                            <span className="ml-2 text-foreground font-mono">{req.spaceId}</span>
-                                          </span>
-                                          <span className="px-2 py-0.5 rounded-md bg-muted text-xs font-medium text-muted-foreground">
-                                            TAT: {Math.max(0, Math.floor((Date.now() - new Date(req.date).getTime()) / (1000 * 60 * 60 * 24)))} days
-                                          </span>
-                                        </div>
-                                      )}
                                     </>
                                   )}
                                 </div>
