@@ -4,7 +4,34 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-export type Department = "aero" | "non-aero";
+export type Department =
+  | "aero"
+  | "non-aero"
+  | "gtd"
+  | "ald"
+  | "it"
+  | "pne"
+  | "pmt"
+  | "cfl"
+  | "tops"
+  | "pax";
+
+export const DEPARTMENT_OPTIONS: { value: Department; label: string }[] = [
+  { value: "aero", label: "Aero" },
+  { value: "non-aero", label: "Non-Aero" },
+  { value: "gtd", label: "GTD" },
+  { value: "ald", label: "ALD" },
+  { value: "it", label: "IT" },
+  { value: "pne", label: "P&E" },
+  { value: "pmt", label: "PMT" },
+  { value: "cfl", label: "CFL" },
+  { value: "tops", label: "TOPS" },
+  { value: "pax", label: "PAX" },
+];
+
+export const DEPARTMENT_LABELS: Record<Department, string> = Object.fromEntries(
+  DEPARTMENT_OPTIONS.map((o) => [o.value, o.label])
+) as Record<Department, string>;
 
 export interface Customer {
   mobile: string; // primary key
