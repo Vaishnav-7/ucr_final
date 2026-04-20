@@ -37,7 +37,7 @@ interface InternalDashboardProps {
 type DashFilter = "pending" | "all" | "completed";
 
 const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoadKVAH } = useRequestStore();
   const ccStore = useCcRequestStore();
   const customerStore = useCustomerStore();
   const { getDocumentsForRequest } = useDocumentStore();
@@ -70,6 +70,16 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   const [editAddrReqId, setEditAddrReqId] = useState<string | null>(null);
   const [editAddrValue, setEditAddrValue] = useState("");
   const [editSpaceIdValue, setEditSpaceIdValue] = useState("");
+
+  // SPOC load editing (Max Demand kVAH)
+  const [editLoadReqId, setEditLoadReqId] = useState<string | null>(null);
+  const [editLoadValue, setEditLoadValue] = useState("");
+
+  // P&E tariff editor
+  const [showTariffEditor, setShowTariffEditor] = useState(false);
+  const [tariffDraft, setTariffDraft] = useState<string>("");
+  const [tariffSaved, setTariffSaved] = useState(false);
+  const tariffRate = useTariffRate();
 
   // CC approval state (finance only)
   const [ccExpandedId, setCcExpandedId] = useState<string | null>(null);
