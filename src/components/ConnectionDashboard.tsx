@@ -392,6 +392,17 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                               <span className="ml-2 text-warning font-medium">{req.expiry}</span>
                             </div>
                           )}
+                          {req.selectedMeter && (
+                            <div className="col-span-2">
+                              <span className="text-muted-foreground">Selected Meter:</span>
+                              <span className="ml-2 text-foreground font-medium">
+                                {req.selectedMeter.make} — {req.selectedMeter.model}
+                              </span>
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                ({req.selectedMeter.conn}, CT: {req.selectedMeter.ct})
+                              </span>
+                            </div>
+                          )}
 
                           {/* ── Customer Details ── */}
                           {req.userDetails && (
