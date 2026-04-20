@@ -105,9 +105,21 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
     0
   ) + customKW;
   const calcKVA = calcKW / 0.8;
+  const calcKVAH = DEFAULT_APPLIANCES.reduce(
+    (sum, a) => sum + ((kwValues[a.name] || 0) * (quantities[a.name] || 0) * (hoursValues[a.name] || 0)) / 0.8,
+    0
+  ) + customAppliances.reduce((sum, a) => sum + (a.kw * a.qty * a.hours) / 0.8, 0);
+
+  // Validation: any appliance with qty > 0 must have hours > 0
+  const missingHoursDefault = DEFAULT_APPLIANCES.filter(
+    (a) => (quantities[a.name] || 0) > 0 && !(hoursValues[a.name] > 0)
+  ).map((a) => a.name);
+  const missingHoursCustom = customAppliances.filter((a) => a.qty > 0 && !(a.hours > 0)).map((a) => a.name);
+  const missingHours = [...missingHoursDefault, ...missingHoursCustom];
+  const hasHoursError = method === "calculator" && missingHours.length > 0;
 
   const displayKW = method === "upload" && manualKW ? parseFloat(manualKW) || 0 : calcKW;
-  const displayKVA = method === "upload" && manualKVA ? parseFloat(manualKVA) || 0 : calcKVA;
+  const displayKVAH = method === "upload" && manualKVA ? parseFloat(manualKVA) || 0 : calcKVAH;
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl mx-auto">
