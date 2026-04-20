@@ -69,6 +69,8 @@ export interface ConnectionRequest {
   waterDemand?: WaterDemandData;
   deactivated?: boolean;
   extensionRequest?: ExtensionRequest;
+  /** ID of the workflow stage at which the request was rejected (cleared once it advances past that stage again). */
+  rejectedFromStageId?: string;
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [
@@ -180,7 +182,17 @@ export function useRequestStore() {
     globalRequests = globalRequests.map((r) => {
       if (r.id !== requestId) return r;
       const stages = getWorkflowStages(r.workflowType);
-      return { ...r, stageIndex: Math.min(r.stageIndex + 1, stages.length - 1), rejectionReason: undefined, completedActions: [] };
+      const newIndex = Math.min(r.stageIndex + 1, stages.length - 1);
+      // Clear the red rejected-stage marker once we successfully pass that stage again.
+      const rejectedIdx = r.rejectedFromStageId ? stages.findIndex((s) => s.id === r.rejectedFromStageId) : -1;
+      const clearRejectedFrom = rejectedIdx >= 0 && newIndex > rejectedIdx;
+      return {
+        ...r,
+        stageIndex: newIndex,
+        rejectionReason: undefined,
+        completedActions: [],
+        rejectedFromStageId: clearRejectedFrom ? undefined : r.rejectedFromStageId,
+      };
     });
     notify();
   }, []);
@@ -195,7 +207,14 @@ export function useRequestStore() {
   const rejectRequest = useCallback((requestId: string, reason: string) => {
     globalRequests = globalRequests.map((r) => {
       if (r.id !== requestId) return r;
-      return { ...r, stageIndex: Math.max(r.stageIndex - 1, 0), rejectionReason: reason };
+      const stages = getWorkflowStages(r.workflowType);
+      const rejectedStageId = stages[Math.min(r.stageIndex, stages.length - 1)]?.id;
+      return {
+        ...r,
+        stageIndex: Math.max(r.stageIndex - 1, 0),
+        rejectionReason: reason,
+        rejectedFromStageId: rejectedStageId,
+      };
     });
     notify();
   }, []);
