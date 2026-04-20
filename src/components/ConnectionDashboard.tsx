@@ -725,19 +725,27 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                     const dynamicActions = (currentStage.id === "meter-purchase" && req.utility === "Water" && req.waterDemand)
                       ? getWaterMeterUploadActions(req.waterDemand)
                       : currentStage.actions;
+                    const requiresMeterSelection =
+                      req.utility === "Power" &&
+                      (currentStage.id === "customer-meter-upload" || currentStage.id === "meter-recommendation") &&
+                      !req.selectedMeter;
                     return dynamicActions && dynamicActions.length > 0 ? (
                       <div className="mt-4 pt-3 border-t border-border/50 flex flex-wrap gap-2">
                         {dynamicActions.map((action) => {
                           const done = req.completedActions?.includes(action.label);
+                          const blocked = requiresMeterSelection && !done;
                           return (
                             <button
                               key={action.label}
-                              onClick={() => !done && handleActionClick(req.id, action)}
-                              disabled={done}
+                              onClick={() => !done && !blocked && handleActionClick(req.id, action)}
+                              disabled={done || blocked}
+                              title={blocked ? "Select a meter from the recommendations first" : undefined}
                               className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
                                 done
                                   ? "bg-muted text-muted-foreground cursor-not-allowed line-through"
-                                  : action.type === "confirm" && action.label.includes("Deactivation")
+                                  : blocked
+                                    ? "bg-muted/60 text-muted-foreground cursor-not-allowed"
+                                    : action.type === "confirm" && action.label.includes("Deactivation")
                                     ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
                                     : "bg-accent/10 text-accent hover:bg-accent/20"
                               }`}
