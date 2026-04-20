@@ -159,7 +159,7 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
     { id: "sd-decision", label: "SD Decision", userActionRequired: false },
     { id: "sd-payment", label: "SD Payment", userActionRequired: true, actions: [SD_UPLOAD_ACTION] },
-    { id: "finance-confirms", label: "Finance Confirms", userActionRequired: false },
+    { id: "finance-confirms", label: "SD Verification", userActionRequired: false },
     { id: "customer-meter-upload", label: "Meter Purchase & Calibration", userActionRequired: true, actions: METER_ACTIONS },
     { id: "calibration-uploaded", label: "Calibration Certificate Uploaded", userActionRequired: false },
     { id: "slotting", label: "Slotting", userActionRequired: false },
