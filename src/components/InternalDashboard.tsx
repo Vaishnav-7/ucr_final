@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Droplets, CheckCircle2, Clock, AlertCircle, BarChart3,
   LogOut, FileText, XCircle, ChevronDown, ChevronUp, CalendarIcon,
-  Upload, ShieldCheck, Hash, Search, Plus, Pencil, Settings, Save, Layers, User, Download,
+  Upload, ShieldCheck, Hash, Search, Plus, Pencil, Settings, Save, Layers, User, Download, X,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import JSZip from "jszip";
