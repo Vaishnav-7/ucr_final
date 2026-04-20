@@ -33,6 +33,9 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
   const [kwValues, setKwValues] = useState<Record<string, number>>(
     Object.fromEntries(DEFAULT_APPLIANCES.map((a) => [a.name, a.kw]))
   );
+  const [hoursValues, setHoursValues] = useState<Record<string, number>>(
+    Object.fromEntries(DEFAULT_APPLIANCES.map((a) => [a.name, 0]))
+  );
   const [docUploaded, setDocUploaded] = useState(false);
   const [loadDocFile, setLoadDocFile] = useState<File | null>(null);
   const [manualKW, setManualKW] = useState("");
@@ -102,7 +105,7 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
 
       <div className="flex gap-2 mb-6 p-1 bg-muted rounded-xl max-w-md">
         <button onClick={() => setMethod("calculator")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${method === "calculator" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
-          <Calculator className="w-4 h-4" /> AI Calculator
+          <Calculator className="w-4 h-4" /> Load Calculator
         </button>
         <button onClick={() => setMethod("upload")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${method === "upload" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
           <Upload className="w-4 h-4" /> Upload Document
