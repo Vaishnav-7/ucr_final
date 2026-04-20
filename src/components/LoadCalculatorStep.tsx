@@ -23,6 +23,7 @@ interface CustomAppliance {
   name: string;
   kw: number;
   qty: number;
+  hours: number;
 }
 
 const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
@@ -32,6 +33,9 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
   );
   const [kwValues, setKwValues] = useState<Record<string, number>>(
     Object.fromEntries(DEFAULT_APPLIANCES.map((a) => [a.name, a.kw]))
+  );
+  const [hoursValues, setHoursValues] = useState<Record<string, number>>(
+    Object.fromEntries(DEFAULT_APPLIANCES.map((a) => [a.name, 0]))
   );
   const [docUploaded, setDocUploaded] = useState(false);
   const [loadDocFile, setLoadDocFile] = useState<File | null>(null);
@@ -55,12 +59,17 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
     setKwValues((prev) => ({ ...prev, [name]: isNaN(num) ? 0 : num }));
   };
 
+  const updateHours = (name: string, value: string) => {
+    const num = parseFloat(value);
+    setHoursValues((prev) => ({ ...prev, [name]: isNaN(num) ? 0 : num }));
+  };
+
   const addCustomAppliance = () => {
     const kw = parseFloat(newKW);
     if (!newName.trim() || isNaN(kw) || kw <= 0) return;
     setCustomAppliances((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), name: newName.trim(), kw, qty: 1 },
+      { id: crypto.randomUUID(), name: newName.trim(), kw, qty: 1, hours: 0 },
     ]);
     setNewName("");
     setNewKW("");
@@ -76,6 +85,13 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
     const num = parseFloat(value);
     setCustomAppliances((prev) =>
       prev.map((a) => (a.id === id ? { ...a, kw: isNaN(num) ? 0 : num } : a))
+    );
+  };
+
+  const updateCustomHours = (id: string, value: string) => {
+    const num = parseFloat(value);
+    setCustomAppliances((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, hours: isNaN(num) ? 0 : num } : a))
     );
   };
 
@@ -102,7 +118,7 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
 
       <div className="flex gap-2 mb-6 p-1 bg-muted rounded-xl max-w-md">
         <button onClick={() => setMethod("calculator")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${method === "calculator" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
-          <Calculator className="w-4 h-4" /> AI Calculator
+          <Calculator className="w-4 h-4" /> Load Calculator
         </button>
         <button onClick={() => setMethod("upload")} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${method === "upload" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
           <Upload className="w-4 h-4" /> Upload Document
@@ -136,16 +152,30 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs text-muted-foreground whitespace-nowrap">kW per unit:</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.001"
-                      value={kwValues[appliance.name]}
-                      onChange={(e) => updateKw(appliance.name, e.target.value)}
-                      className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground whitespace-nowrap">kW/unit:</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.001"
+                        value={kwValues[appliance.name]}
+                        onChange={(e) => updateKw(appliance.name, e.target.value)}
+                        className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground whitespace-nowrap">Hours/day:</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="24"
+                        step="0.5"
+                        value={hoursValues[appliance.name]}
+                        onChange={(e) => updateHours(appliance.name, e.target.value)}
+                        className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -185,16 +215,30 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
                         </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-muted-foreground whitespace-nowrap">kW per unit:</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.001"
-                        value={appliance.kw}
-                        onChange={(e) => updateCustomKw(appliance.id, e.target.value)}
-                        className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-                      />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-muted-foreground whitespace-nowrap">kW/unit:</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.001"
+                          value={appliance.kw}
+                          onChange={(e) => updateCustomKw(appliance.id, e.target.value)}
+                          className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-muted-foreground whitespace-nowrap">Hours/day:</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="24"
+                          step="0.5"
+                          value={appliance.hours}
+                          onChange={(e) => updateCustomHours(appliance.id, e.target.value)}
+                          className="flex h-8 w-full rounded-lg border border-input bg-background px-2 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -315,7 +359,7 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
       <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-3 mt-8">
         <button onClick={onBack} className="btn-secondary flex items-center justify-center gap-2"><ArrowLeft className="w-4 h-4" /> Back</button>
         <button
-          onClick={() => onNext({ method, quantities, kwValues, totalKW: displayKW, totalKVA: displayKVA, docUploaded, customAppliances, loadDocFile })}
+          onClick={() => onNext({ method, quantities, kwValues, hoursValues, totalKW: displayKW, totalKVA: displayKVA, docUploaded, customAppliances, loadDocFile })}
           className="btn-accent flex items-center justify-center gap-2 text-lg px-8 py-4 sm:w-auto w-full"
         >
           <Send className="w-5 h-5" /> Submit Request
