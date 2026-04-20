@@ -499,36 +499,6 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                             );
                           })()}
 
-                          {/* ── Workflow Status ── */}
-                          {(req.sdDecision || req.siteVisitDate) && (
-                            <>
-                              <div className="col-span-2 border-t border-border/50 my-1" />
-                              <div className="col-span-2 mb-1">
-                                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Workflow Status</span>
-                              </div>
-                              {req.sdDecision && (
-                                <div className="col-span-2">
-                                  <span className="text-muted-foreground">SD Status:</span>
-                                  <span className={`ml-2 font-medium ${
-                                    req.sdDecision === "waived" ? "text-warning" :
-                                    req.sdDecision === "collected" ? "text-success" : "text-accent"
-                                  }`}>
-                                    {req.sdDecision === "waived" ? "Waived" :
-                                     req.sdDecision === "collected" ? "Already Collected" : "Pending Collection"}
-                                  </span>
-                                  {req.sdDecision === "pending" && req.sdAmount && (
-                                    <span className="ml-2 text-foreground font-semibold">₹{req.sdAmount}</span>
-                                  )}
-                                </div>
-                              )}
-                              {req.siteVisitDate && (
-                                <div className="col-span-2">
-                                  <span className="text-muted-foreground">Site Visit:</span>
-                                  <span className="ml-2 text-info font-medium">{req.siteVisitDate}</span>
-                                </div>
-                              )}
-                            </>
-                          )}
                         </div>
                       </motion.div>
                     )}
