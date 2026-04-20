@@ -630,6 +630,9 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                               <div>
                                 <p className="text-xs font-semibold text-info mb-1">P&E Recommendation – Water</p>
                                 <p className="text-sm text-foreground whitespace-pre-line">{waterRecMsg}</p>
+                                <p className="text-xs text-muted-foreground mt-3 whitespace-pre-line">
+                                  In case of any queries contact:{"\n"}Sravan Kumar{"\n"}9000000003
+                                </p>
                               </div>
                             </div>
                           </motion.div>
@@ -683,6 +686,9 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                             {powerFooter && (
                               <p className="text-xs text-center text-muted-foreground italic mt-2">{powerFooter}</p>
                             )}
+                            <p className="text-xs text-muted-foreground mt-3 whitespace-pre-line">
+                              In case of any queries contact:{"\n"}Sravan Kumar{"\n"}9000000003
+                            </p>
                           </motion.div>
                         )}
                       </AnimatePresence>
