@@ -25,7 +25,7 @@ import { getPowerMeterRows, setPowerMeterRows, getPowerFooterNote, setPowerFoote
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "./ui/table";
 import { useEffect } from "react";
 import { SPOC_DEPARTMENT_MAP } from "./LoginStep";
-import { useCustomerStore, type Customer, type Department } from "@/lib/customerStore";
+import { useCustomerStore, type Customer, type Department, DEPARTMENT_LABELS } from "@/lib/customerStore";
 import { useTariffRate, setTariffRate, calculateSdAmount, SD_DAYS } from "@/lib/tariffStore";
 
 interface InternalDashboardProps {
