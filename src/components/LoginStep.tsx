@@ -19,7 +19,8 @@ const MOBILE_ROLE_MAP: Record<string, UserRole> = {
 };
 
 // SPOC mobile → department mapping (used to filter their dashboard)
-export const SPOC_DEPARTMENT_MAP: Record<string, "aero" | "non-aero"> = {
+import type { Department } from "@/lib/customerStore";
+export const SPOC_DEPARTMENT_MAP: Record<string, Department> = {
   "9000000002": "aero",
   "9000000005": "non-aero",
 };
