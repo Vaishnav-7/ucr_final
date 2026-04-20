@@ -105,9 +105,21 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
     0
   ) + customKW;
   const calcKVA = calcKW / 0.8;
+  const calcKVAH = DEFAULT_APPLIANCES.reduce(
+    (sum, a) => sum + ((kwValues[a.name] || 0) * (quantities[a.name] || 0) * (hoursValues[a.name] || 0)) / 0.8,
+    0
+  ) + customAppliances.reduce((sum, a) => sum + (a.kw * a.qty * a.hours) / 0.8, 0);
+
+  // Validation: any appliance with qty > 0 must have hours > 0
+  const missingHoursDefault = DEFAULT_APPLIANCES.filter(
+    (a) => (quantities[a.name] || 0) > 0 && !(hoursValues[a.name] > 0)
+  ).map((a) => a.name);
+  const missingHoursCustom = customAppliances.filter((a) => a.qty > 0 && !(a.hours > 0)).map((a) => a.name);
+  const missingHours = [...missingHoursDefault, ...missingHoursCustom];
+  const hasHoursError = method === "calculator" && missingHours.length > 0;
 
   const displayKW = method === "upload" && manualKW ? parseFloat(manualKW) || 0 : calcKW;
-  const displayKVA = method === "upload" && manualKVA ? parseFloat(manualKVA) || 0 : calcKVA;
+  const displayKVAH = method === "upload" && manualKVA ? parseFloat(manualKVA) || 0 : calcKVAH;
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl mx-auto">
@@ -291,21 +303,24 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
               </div>
               <h3 className="text-lg font-semibold text-foreground">Load Summary</h3>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-muted">
-                <p className="text-sm text-muted-foreground">Total Load</p>
-                <p className="text-3xl font-bold font-display text-foreground">{displayKW.toFixed(2)}<span className="text-sm font-normal text-muted-foreground ml-1">kW</span></p>
-              </div>
+            <div className="grid grid-cols-1 gap-4">
               <div className="p-4 rounded-xl bg-muted">
                 <p className="text-sm text-muted-foreground">Max Demand</p>
-                <p className="text-3xl font-bold font-display text-foreground">{displayKVA.toFixed(2)}<span className="text-sm font-normal text-muted-foreground ml-1">kVA</span></p>
+                <p className="text-3xl font-bold font-display text-foreground">{displayKVAH.toFixed(2)}<span className="text-sm font-normal text-muted-foreground ml-1">kVAH</span></p>
               </div>
             </div>
-            {displayKW > 0 && method === "calculator" && (
+            {hasHoursError && (
+              <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                <p className="text-xs text-destructive">
+                  Please enter Hours/day for: {missingHours.join(", ")}
+                </p>
+              </div>
+            )}
+            {displayKVAH > 0 && method === "calculator" && !hasHoursError && (
               <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
                 <p className="text-xs text-muted-foreground">
-                  Breakdown: {DEFAULT_APPLIANCES.filter((a) => quantities[a.name] > 0).map((a) => `${quantities[a.name]}× ${a.name} (${((kwValues[a.name] || 0) * quantities[a.name]).toFixed(2)} kW)`).join(" • ")}
-                  {customAppliances.filter((a) => a.qty > 0).map((a) => ` • ${a.qty}× ${a.name} (${(a.kw * a.qty).toFixed(2)} kW)`).join("")}
+                  Breakdown: {DEFAULT_APPLIANCES.filter((a) => quantities[a.name] > 0).map((a) => `${quantities[a.name]}× ${a.name} (${(((kwValues[a.name] || 0) * quantities[a.name] * (hoursValues[a.name] || 0)) / 0.8).toFixed(2)} kVAH)`).join(" • ")}
+                  {customAppliances.filter((a) => a.qty > 0).map((a) => ` • ${a.qty}× ${a.name} (${((a.kw * a.qty * a.hours) / 0.8).toFixed(2)} kVAH)`).join("")}
                 </p>
               </div>
             )}
@@ -348,7 +363,7 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
                 <input type="number" min="0" step="0.01" placeholder="e.g. 15" value={manualKW} onChange={(e) => setManualKW(e.target.value)} className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Maximum Demand (kVA)</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Maximum Demand (kVAH)</label>
                 <input type="number" min="0" step="0.01" placeholder="e.g. 18" value={manualKVA} onChange={(e) => setManualKVA(e.target.value)} className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
               </div>
             </div>
@@ -359,8 +374,9 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
       <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-3 mt-8">
         <button onClick={onBack} className="btn-secondary flex items-center justify-center gap-2"><ArrowLeft className="w-4 h-4" /> Back</button>
         <button
-          onClick={() => onNext({ method, quantities, kwValues, hoursValues, totalKW: displayKW, totalKVA: displayKVA, docUploaded, customAppliances, loadDocFile })}
-          className="btn-accent flex items-center justify-center gap-2 text-lg px-8 py-4 sm:w-auto w-full"
+          onClick={() => onNext({ method, quantities, kwValues, hoursValues, totalKW: displayKW, totalKVAH: displayKVAH, docUploaded, customAppliances, loadDocFile })}
+          disabled={hasHoursError}
+          className="btn-accent flex items-center justify-center gap-2 text-lg px-8 py-4 sm:w-auto w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Send className="w-5 h-5" /> Submit Request
         </button>
