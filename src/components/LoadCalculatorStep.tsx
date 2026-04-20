@@ -303,21 +303,24 @@ const LoadCalculatorStep = ({ onNext, onBack }: LoadCalculatorStepProps) => {
               </div>
               <h3 className="text-lg font-semibold text-foreground">Load Summary</h3>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-muted">
-                <p className="text-sm text-muted-foreground">Total Load</p>
-                <p className="text-3xl font-bold font-display text-foreground">{displayKW.toFixed(2)}<span className="text-sm font-normal text-muted-foreground ml-1">kW</span></p>
-              </div>
+            <div className="grid grid-cols-1 gap-4">
               <div className="p-4 rounded-xl bg-muted">
                 <p className="text-sm text-muted-foreground">Max Demand</p>
-                <p className="text-3xl font-bold font-display text-foreground">{displayKVA.toFixed(2)}<span className="text-sm font-normal text-muted-foreground ml-1">kVA</span></p>
+                <p className="text-3xl font-bold font-display text-foreground">{displayKVAH.toFixed(2)}<span className="text-sm font-normal text-muted-foreground ml-1">kVAH</span></p>
               </div>
             </div>
-            {displayKW > 0 && method === "calculator" && (
+            {hasHoursError && (
+              <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                <p className="text-xs text-destructive">
+                  Please enter Hours/day for: {missingHours.join(", ")}
+                </p>
+              </div>
+            )}
+            {displayKVAH > 0 && method === "calculator" && !hasHoursError && (
               <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
                 <p className="text-xs text-muted-foreground">
-                  Breakdown: {DEFAULT_APPLIANCES.filter((a) => quantities[a.name] > 0).map((a) => `${quantities[a.name]}× ${a.name} (${((kwValues[a.name] || 0) * quantities[a.name]).toFixed(2)} kW)`).join(" • ")}
-                  {customAppliances.filter((a) => a.qty > 0).map((a) => ` • ${a.qty}× ${a.name} (${(a.kw * a.qty).toFixed(2)} kW)`).join("")}
+                  Breakdown: {DEFAULT_APPLIANCES.filter((a) => quantities[a.name] > 0).map((a) => `${quantities[a.name]}× ${a.name} (${(((kwValues[a.name] || 0) * quantities[a.name] * (hoursValues[a.name] || 0)) / 0.8).toFixed(2)} kVAH)`).join(" • ")}
+                  {customAppliances.filter((a) => a.qty > 0).map((a) => ` • ${a.qty}× ${a.name} (${((a.kw * a.qty * a.hours) / 0.8).toFixed(2)} kVAH)`).join("")}
                 </p>
               </div>
             )}
