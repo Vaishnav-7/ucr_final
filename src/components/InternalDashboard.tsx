@@ -26,6 +26,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from ".
 import { useEffect } from "react";
 import { SPOC_DEPARTMENT_MAP } from "./LoginStep";
 import { useCustomerStore, type Customer, type Department } from "@/lib/customerStore";
+import { useTariffRate, setTariffRate, calculateSdAmount, SD_DAYS } from "@/lib/tariffStore";
 
 interface InternalDashboardProps {
   role: UserRole;
