@@ -721,9 +721,6 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                             {powerFooter && (
                               <p className="text-xs text-center text-muted-foreground italic mt-2">{powerFooter}</p>
                             )}
-                            <p className="text-xs text-muted-foreground mt-3 whitespace-pre-line">
-                              In case of any queries contact:{"\n"}Sravan Kumar{"\n"}9000000003
-                            </p>
                           </motion.div>
                         )}
                       </AnimatePresence>
