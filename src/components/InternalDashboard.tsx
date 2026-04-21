@@ -131,12 +131,26 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
   const visibleRequests = requests.filter(requestBelongsToMe);
 
+  /** For the combined parallel SD+Meter stage, decide whether THIS role has a slice waiting. */
+  const combinedStagePendingForRole = (r: ConnectionRequest): boolean => {
+    if (role === "finance") {
+      return r.sdDecision === "pending" && !!r.sdSubmitted && !r.sdApproved;
+    }
+    if (role === "pne") {
+      return !!r.meterSubmitted && !r.meterApproved;
+    }
+    return false;
+  };
+
   // All requests where current stage belongs to this role and not completed → "Take Action"
   const myPendingRequests = visibleRequests.filter((r) => {
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
     const stageRole = STAGE_ROLE_MAP[stage.id];
     const stages = getWorkflowStages(r.workflowType);
     const isCompleted = r.stageIndex >= stages.length - 1;
+    if (stage.id === "sd-and-meter") {
+      return !isCompleted && !r.rejectionReason && combinedStagePendingForRole(r);
+    }
     return stageRole === role && !isCompleted && !r.rejectionReason;
   });
 
@@ -152,6 +166,9 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
     const stageRole = STAGE_ROLE_MAP[stage.id];
     const isCompleted = r.stageIndex >= stages.length - 1;
+    if (stage.id === "sd-and-meter") {
+      return !isCompleted && !r.rejectionReason && !combinedStagePendingForRole(r);
+    }
     // Active but not awaiting this role's action and not rejected
     return !isCompleted && !r.rejectionReason && stageRole !== role;
   });
