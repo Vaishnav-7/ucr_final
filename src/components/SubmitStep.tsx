@@ -168,30 +168,46 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
     <Dialog open={showTerms} onOpenChange={(open) => { if (!open && !submittedRef.current) { /* prevent dismiss */ setShowTerms(true); } }}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Terms &amp; Conditions — Power Connection</DialogTitle>
+          <DialogTitle>
+            Terms &amp; Conditions — {isNonMetered ? "Non-Metered" : "Metered"} Power Connection
+          </DialogTitle>
           <DialogDescription>
             Please read and accept the terms below before submitting your power connection request.
           </DialogDescription>
         </DialogHeader>
         <div className="overflow-y-auto pr-2 text-sm text-foreground space-y-2">
-          <ul className="list-disc pl-5 space-y-2">
-            <li>Only approved digital energy meters shall be procured.</li>
-            <li>Separate ECR forms shall be submitted for different locations even if concessionaires are same.</li>
-            <li>Energy Meter Calibration/Test certificate shall be submitted with ECR form.</li>
-            <li>Connections shall only be provided upon submission of a duly filled application form along with a valid calibration certificate. Calibration is considered valid for five years from the date of issue. After this period, recalibration is mandatory to ensure continued compliance and accuracy.</li>
-            <li>If any meter is found in damaged/not working condition, consumption charges will be imposed based on the average consumption recorded in the previous three months.</li>
-            <li>If any malpractices such as tampering of meter, temporary removal, or unauthorized connections are observed, it will be considered as severe violation. Penalty shall be imposed, whichever is higher as follows:
-              <ul className="list-[circle] pl-5 mt-1">
-                <li>Option 1: Impose a default Rs 1,00,000/- per incident/malpractice.</li>
-                <li>Option 2: Impose a penalty 3 times Maximum Demand.</li>
-              </ul>
-            </li>
-            <li>In case of connection type is declared as prepaid connection, vendor has to share contact details &amp; email ID for account creation and recharges.</li>
-            <li>ECR form must be readily available and produced on request by any GHIAL personnel. Failure to produce (not available) ECR form when requested will result in <strong>immediate termination of the connection</strong>.</li>
-            <li>Before vacating the location, all the cables shall be concealed properly, and Off Boarding HOTO form to be submitted; if failed to do so, charges of corresponding work will be penalized.</li>
-            <li>If any concessionaire submits a request 90 days after the request date, we will not provide the connection at that time.</li>
-            <li>In case of non-metered connection is required, a separate non meter form shall be submitted.</li>
-          </ul>
+          {isNonMetered ? (
+            <ul className="list-disc pl-5 space-y-2">
+              <li>If any malpractices such as unauthorized connections or usage of high energy consuming equipment are observed, it will be considered as severe violation. Penalty shall be imposed, whichever is higher as follows:
+                <ul className="list-[circle] pl-5 mt-1">
+                  <li>Option 1: Impose a default Rs 1,00,000/- per incident/malpractice.</li>
+                  <li>Option 2: Impose a penalty 3 times Maximum Demand.</li>
+                </ul>
+              </li>
+              <li>ECR form must be readily available and produced on request by any GHIAL personnel. Failure to produce (not available) ECR form when requested will result in <strong>immediate termination of the connection</strong>.</li>
+              <li>Before vacating the location, all the cables shall be concealed properly, and Off Boarding HOTO form to be submitted; if failed to do so, charges of corresponding work will be penalized.</li>
+              <li>If any concessionaire submits a request 90 days after the request date, we will not provide the connection at that time.</li>
+            </ul>
+          ) : (
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Only approved digital energy meters shall be procured.</li>
+              <li>Separate ECR forms shall be submitted for different locations even if concessionaires are same.</li>
+              <li>Energy Meter Calibration/Test certificate shall be submitted with ECR form.</li>
+              <li>Connections shall only be provided upon submission of a duly filled application form along with a valid calibration certificate. Calibration is considered valid for five years from the date of issue. After this period, recalibration is mandatory to ensure continued compliance and accuracy.</li>
+              <li>If any meter is found in damaged/not working condition, consumption charges will be imposed based on the average consumption recorded in the previous three months.</li>
+              <li>If any malpractices such as tampering of meter, temporary removal, or unauthorized connections are observed, it will be considered as severe violation. Penalty shall be imposed, whichever is higher as follows:
+                <ul className="list-[circle] pl-5 mt-1">
+                  <li>Option 1: Impose a default Rs 1,00,000/- per incident/malpractice.</li>
+                  <li>Option 2: Impose a penalty 3 times Maximum Demand.</li>
+                </ul>
+              </li>
+              <li>In case of connection type is declared as prepaid connection, vendor has to share contact details &amp; email ID for account creation and recharges.</li>
+              <li>ECR form must be readily available and produced on request by any GHIAL personnel. Failure to produce (not available) ECR form when requested will result in <strong>immediate termination of the connection</strong>.</li>
+              <li>Before vacating the location, all the cables shall be concealed properly, and Off Boarding HOTO form to be submitted; if failed to do so, charges of corresponding work will be penalized.</li>
+              <li>If any concessionaire submits a request 90 days after the request date, we will not provide the connection at that time.</li>
+              <li>In case of non-metered connection is required, a separate non meter form shall be submitted.</li>
+            </ul>
+          )}
         </div>
         <div className="flex items-center gap-2 pt-2 border-t">
           <Checkbox id="agree-terms" checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} />
