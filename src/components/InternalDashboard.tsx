@@ -1147,7 +1147,9 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                 const isMine = !isCompleted && (
                   currentStage.id === "sd-and-meter"
                     ? combinedStagePendingForRole(req)
-                    : STAGE_ROLE_MAP[currentStage.id] === role
+                    : currentStage.id === "slotting"
+                      ? slottingStagePendingForRole(req)
+                      : STAGE_ROLE_MAP[currentStage.id] === role
                 );
 
                 return (
