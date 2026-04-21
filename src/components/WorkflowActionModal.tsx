@@ -142,19 +142,15 @@ const WorkflowActionModal = ({ open, onClose, onSubmit, requestId, action, onFil
                           onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
                         />
                       ) : field.type === "date" ? (
-                        <div className="relative">
-                          <input
-                            type="date"
-                            className="input-glass w-full"
-                            value={textValues[field.name] || ""}
-                            onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
-                          />
-                          {!textValues[field.name] && (
-                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
-                              {`Enter ${field.label.replace(/^Meter\s+/i, "")}`}
-                            </span>
-                          )}
-                        </div>
+                        <input
+                          type={textValues[field.name] ? "date" : "text"}
+                          onFocus={(e) => { e.currentTarget.type = "date"; try { (e.currentTarget as any).showPicker?.(); } catch {} }}
+                          onBlur={(e) => { if (!e.currentTarget.value) e.currentTarget.type = "text"; }}
+                          placeholder={`Enter ${field.label.replace(/^Meter\s+/i, "")}`}
+                          className="input-glass w-full"
+                          value={textValues[field.name] || ""}
+                          onChange={(e) => setTextValues((prev) => ({ ...prev, [field.name]: e.target.value }))}
+                        />
                       ) : field.type === "number" ? (
                         <input
                           type="number"
