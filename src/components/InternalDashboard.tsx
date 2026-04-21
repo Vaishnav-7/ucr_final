@@ -38,7 +38,7 @@ interface InternalDashboardProps {
 type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad, approveSdSlice, approveMeterSlice, rejectSdSlice, rejectMeterSlice } = useRequestStore();
   const ccStore = useCcRequestStore();
   const customerStore = useCustomerStore();
   const { getDocumentsForRequest } = useDocumentStore();
