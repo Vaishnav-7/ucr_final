@@ -183,12 +183,70 @@ const SiteVisitDashboard = ({ onLogout }: SiteVisitDashboardProps) => {
 
             {/* SD info */}
             {req.sdDecision && renderDetailRow(<FileText className="w-4 h-4 text-muted-foreground" />, "SD Decision", req.sdDecision === "collected" ? "Collected" : req.sdDecision === "waived" ? "Waived" : "Pending")}
-            {req.sdAmount && renderDetailRow(<FileText className="w-4 h-4 text-muted-foreground" />, "SD Amount", `₹${req.sdAmount}`)}
 
             {/* Expiry (temp) */}
             {req.expiry && renderDetailRow(<Calendar className="w-4 h-4 text-muted-foreground" />, "Connection Expiry", req.expiry)}
           </motion.div>
         )}
+
+        {/* Appliance / Load breakdown (Power, calculator method) */}
+        {isExpanded && req.loadData?.appliances && req.loadData.appliances.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mb-4 p-3 rounded-lg border border-border/60 bg-muted/20"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Plug className="w-4 h-4 text-muted-foreground" />
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Connected Load Breakdown</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-[11px] text-muted-foreground border-b border-border/60">
+                    <th className="text-left py-1.5 font-medium">Appliance</th>
+                    <th className="text-right py-1.5 font-medium">kW</th>
+                    <th className="text-right py-1.5 font-medium">Qty</th>
+                    <th className="text-right py-1.5 font-medium">Total kW</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {req.loadData.appliances.map((a, idx) => (
+                    <tr key={idx} className="border-b border-border/30 last:border-0">
+                      <td className="py-1.5 text-foreground">{a.name}</td>
+                      <td className="py-1.5 text-right text-foreground">{a.kw}</td>
+                      <td className="py-1.5 text-right text-foreground">{a.qty}</td>
+                      <td className="py-1.5 text-right font-medium text-foreground">{(a.kw * a.qty).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Uploaded documents */}
+        {isExpanded && (() => {
+          const docs = getDocumentsForRequest(req.id);
+          if (docs.length === 0) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mb-4 p-3 rounded-lg border border-border/60 bg-muted/20"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Uploaded Documents ({docs.length})</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {docs.map(({ slot, doc }) => (
+                  <DocumentLink key={slot} doc={doc} />
+                ))}
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* Fill form button */}
         {showFormButton && (
