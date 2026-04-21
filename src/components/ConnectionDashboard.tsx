@@ -782,9 +782,6 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                       const meterAction = currentStage.actions?.find((a) => a.label === "Upload Calibration Certificate");
                       return (
                         <div className="mt-4 pt-3 border-t border-border/50 space-y-2">
-                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-                            Both steps run in parallel — proceeds to Slotting only after both are approved
-                          </p>
                           <div className="flex flex-wrap gap-2">
                             {/* SD slice */}
                             {sdNeeded && sdAction && !req.sdApproved && (
