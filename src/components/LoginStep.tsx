@@ -8,15 +8,17 @@ import type { UserRole } from "@/lib/roles";
 import { registerUser } from "@/lib/userRegistry";
 import { submitCcRequest, getCcRequestByMobile, type CcRequest } from "@/lib/ccRequestStore";
 import { saveDocument } from "@/lib/documentStore";
+import { isSiteVisitorMobile } from "@/lib/requestStore";
 
-// Hardcoded mobile-to-role mapping
+// Hardcoded mobile-to-role mapping for staff. Note: site-visit role is detected
+// dynamically based on whether the mobile has been assigned to any request by P&E,
+// so it is intentionally not listed here.
 const MOBILE_ROLE_MAP: Record<string, UserRole> = {
   "9000000001": "user",
   "9000000002": "spoc",   // Aero SPOC
   "9000000003": "finance",
   "9000000004": "pne",
   "9000000005": "spoc",   // Non-Aero SPOC
-  "9000000006": "site-visit",
 };
 
 // SPOC mobile → department mapping (used to filter their dashboard)
