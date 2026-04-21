@@ -144,6 +144,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     },
     selectedMeter: { make: "Secure", model: "Elite 444", conn: "3-Phase 4-Wire", ct: "Yes", remark: "CT 100/5A required" },
     sdDecision: "collected",
+    siteVisitor: { name: "Ramesh Kumar", mobile: "9000000006" },
   },
   {
     id: "REQ-2024-202", utility: "Power", type: "Temporary", workflowType: "power-temporary",
@@ -153,6 +154,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     loadData: { method: "upload", totalKVA: 200, totalKVAH: 1600, docUploaded: true },
     selectedMeter: { make: "L&T", model: "ER300P", conn: "3-Phase 4-Wire", ct: "Yes", remark: "Outdoor enclosure" },
     sdDecision: "collected",
+    siteVisitor: { name: "Ramesh Kumar", mobile: "9000000006" },
   },
   {
     id: "REQ-2024-204", utility: "Water", type: "Existing Meter", workflowType: "water-existing-meter",
@@ -160,6 +162,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     stageIndex: 3, date: "2024-04-01", siteVisitDate: "18 April 2024",
     userDetails: { customerName: "Aquaflow Services", customerCode: "CC-1108", contactPerson: "Sanjay Verma", mobile: "9844556677", email: "sanjay@aquaflow.co" },
     waterDemand: { domesticKL: 18, flushingKL: 6, roKL: 4, totalKL: 28 },
+    siteVisitor: { name: "Anita Shetty", mobile: "9000000007" },
   },
   {
     id: "REQ-2024-205", utility: "Water", type: "New Meter", workflowType: "water-no-meter",
@@ -167,6 +170,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     stageIndex: 5, date: "2024-04-03", siteVisitDate: "20 April 2024",
     userDetails: { customerName: "GreenLeaf Foods Pvt Ltd", customerCode: "CC-1209", contactPerson: "Pooja Iyer", mobile: "9855667788", email: "pooja@greenleaf.in" },
     waterDemand: { domesticKL: 30, flushingKL: 12, roKL: 10, totalKL: 52 },
+    siteVisitor: { name: "Ramesh Kumar", mobile: "9000000006" },
   },
 ];
 
