@@ -1616,6 +1616,8 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                             onClick={() => {
                               setSiteVisitReqId(req.id);
                               setSiteVisitEditMode("edit");
+                              setSiteVisitorName(req.siteVisitor?.name ?? "");
+                              setSiteVisitorMobile(req.siteVisitor?.mobile ?? "");
                               const cur = req.siteVisitDate || req.preferredSiteVisitDate;
                               if (cur) {
                                 const parsed = new Date(cur);
