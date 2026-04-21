@@ -285,7 +285,11 @@ const SiteVisitDashboard = ({ onLogout, userMobile }: SiteVisitDashboardProps) =
             </div>
             <div>
               <h1 className="text-2xl font-bold font-display text-foreground">Site Visit Forms</h1>
-              <p className="text-sm text-muted-foreground">Fill site visit forms for assigned requests</p>
+              <p className="text-sm text-muted-foreground">
+                {visitorName
+                  ? <>Welcome <span className="font-semibold text-foreground">{visitorName}</span> — fill site visit forms for the requests assigned to you</>
+                  : "Fill site visit forms for assigned requests"}
+              </p>
             </div>
           </div>
           <button onClick={onLogout} className="btn-secondary flex items-center gap-2 text-sm">
