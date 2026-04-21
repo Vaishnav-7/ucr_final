@@ -664,7 +664,7 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                   )}
 
                   {/* Power Meter Recommendations */}
-                  {actionRequired && (currentStage.id === "customer-meter-upload" || currentStage.id === "meter-recommendation") && req.utility === "Power" && (
+                  {actionRequired && (currentStage.id === "customer-meter-upload" || currentStage.id === "meter-recommendation" || currentStage.id === "sd-and-meter") && req.utility === "Power" && !req.meterApproved && (
                     <div className="mt-3">
                       <button
                         onClick={() => setMeterRecsOpen(meterRecsOpen === req.id ? null : req.id)}
