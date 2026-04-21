@@ -3,10 +3,12 @@ import { motion } from "framer-motion";
 import {
   ClipboardList, LogOut, MapPin, Phone, User, Building2, Zap, Droplets,
   FileText, CheckCircle2, Search, X, Mail, Calendar, Gauge, ChevronDown, ChevronUp,
-  Hash, Settings,
+  Hash, Settings, Plug,
 } from "lucide-react";
 import { useRequestStore, type ConnectionRequest } from "@/lib/requestStore";
 import { getWorkflowStages, getCurrentStage, getWaterSiteVisitActions, getWorkflowLabel } from "@/lib/workflows";
+import { useDocumentStore } from "@/lib/documentStore";
+import DocumentLink from "./DocumentLink";
 import WorkflowActionModal, { type WorkflowAction } from "./WorkflowActionModal";
 
 interface SiteVisitDashboardProps {
