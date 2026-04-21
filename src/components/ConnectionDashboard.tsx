@@ -743,6 +743,94 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
 
                   {/* Action Buttons */}
                   {actionRequired && (() => {
+                    // Combined parallel SD + Meter stage — render slice-aware buttons.
+                    if (currentStage.id === "sd-and-meter") {
+                      const sdNeeded = req.sdDecision === "pending";
+                      const sdAwaiting = sdNeeded && req.sdSubmitted && !req.sdApproved && !req.sdSliceRejectionReason;
+                      const sdRejected = !!req.sdSliceRejectionReason;
+                      const meterAwaiting = req.meterSubmitted && !req.meterApproved && !req.meterSliceRejectionReason;
+                      const meterRejected = !!req.meterSliceRejectionReason;
+                      const meterBlocked = !req.selectedMeter;
+                      const sdAction = currentStage.actions?.find((a) => a.label === "Upload SD Payment Proof");
+                      const meterAction = currentStage.actions?.find((a) => a.label === "Upload Calibration Certificate");
+                      return (
+                        <div className="mt-4 pt-3 border-t border-border/50 space-y-2">
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            Both steps run in parallel — proceeds to Slotting only after both are approved
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {/* SD slice */}
+                            {sdNeeded && sdAction && !req.sdApproved && (
+                              <button
+                                onClick={() => !sdAwaiting && handleActionClick(req.id, sdAction)}
+                                disabled={sdAwaiting}
+                                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
+                                  sdAwaiting
+                                    ? "bg-warning/10 text-warning cursor-wait"
+                                    : sdRejected
+                                      ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                      : "bg-accent/10 text-accent hover:bg-accent/20"
+                                }`}
+                              >
+                                {sdAwaiting ? <Clock className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                                {sdAwaiting
+                                  ? "SD Proof — Awaiting Finance Approval"
+                                  : sdRejected
+                                    ? "Re-upload SD Payment Proof"
+                                    : sdAction.label}
+                              </button>
+                            )}
+                            {req.sdApproved && (
+                              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-success/10 text-success">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                {sdNeeded ? "SD Payment Approved" : req.sdDecision === "waived" ? "SD Waived" : "SD Already Collected"}
+                              </span>
+                            )}
+
+                            {/* Meter slice */}
+                            {meterAction && !req.meterApproved && (
+                              <button
+                                onClick={() => !meterAwaiting && !meterBlocked && handleActionClick(req.id, meterAction)}
+                                disabled={meterAwaiting || meterBlocked}
+                                title={meterBlocked ? "Select a meter from the recommendations first" : undefined}
+                                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
+                                  meterAwaiting
+                                    ? "bg-warning/10 text-warning cursor-wait"
+                                    : meterBlocked
+                                      ? "bg-muted/60 text-muted-foreground cursor-not-allowed"
+                                      : meterRejected
+                                        ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                        : "bg-accent/10 text-accent hover:bg-accent/20"
+                                }`}
+                              >
+                                {meterAwaiting ? <Clock className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                                {meterAwaiting
+                                  ? "Calibration Cert — Awaiting P&E Approval"
+                                  : meterRejected
+                                    ? "Re-upload Calibration Certificate"
+                                    : meterAction.label}
+                              </button>
+                            )}
+                            {req.meterApproved && (
+                              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-success/10 text-success">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Calibration Approved
+                              </span>
+                            )}
+                          </div>
+                          {(sdRejected || meterRejected) && (
+                            <div className="space-y-1">
+                              {sdRejected && (
+                                <p className="text-xs text-destructive">⚠ SD rejected: {req.sdSliceRejectionReason}</p>
+                              )}
+                              {meterRejected && (
+                                <p className="text-xs text-destructive">⚠ Calibration rejected: {req.meterSliceRejectionReason}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
                     // For water meter-purchase, generate dynamic per-category actions
                     const dynamicActions = (currentStage.id === "meter-purchase" && req.utility === "Water" && req.waterDemand)
                       ? getWaterMeterUploadActions(req.waterDemand)
