@@ -61,6 +61,8 @@ export interface ConnectionRequest {
   rejectionReason?: string;
   submittedDocs?: string[];
   siteVisitDate?: string;
+  /** Customer-proposed preferred site visit date (slotting stage). */
+  preferredSiteVisitDate?: string;
   userDetails?: RequestUserDetails;
   sdDecision?: SdDecision;
   sdWaiverProof?: string;
