@@ -74,6 +74,14 @@ export interface ConnectionRequest {
   rejectedFromStageId?: string;
   /** Meter chosen by the customer from the P&E recommendations (Power workflows). */
   selectedMeter?: PowerMeterRow;
+  /** Combined SD+Meter parallel stage sub-state. Customer can submit either slice
+   *  in any order; the stage advances only when both sliceApproved flags are true. */
+  sdSubmitted?: boolean;
+  sdApproved?: boolean;
+  sdSliceRejectionReason?: string;
+  meterSubmitted?: boolean;
+  meterApproved?: boolean;
+  meterSliceRejectionReason?: string;
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [
