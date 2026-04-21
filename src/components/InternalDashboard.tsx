@@ -1651,7 +1651,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); }} />
+            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); setSiteVisitEditMode("schedule"); }} />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1663,8 +1663,28 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                   <CalendarIcon className="w-5 h-5 text-info" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold font-display text-foreground">Schedule Site Visit</h3>
+                  <h3 className="text-lg font-bold font-display text-foreground">
+                    {siteVisitEditMode === "edit" ? "Change Site Visit Date" : "Schedule Site Visit"}
+                  </h3>
                   <p className="text-sm text-muted-foreground">{siteVisitReqId}</p>
+                  {(() => {
+                    const r = requests.find((rr) => rr.id === siteVisitReqId);
+                    if (!r) return null;
+                    return (
+                      <div className="mt-2 space-y-1">
+                        {r.preferredSiteVisitDate && (
+                          <p className="text-xs text-info">
+                            Customer's preferred date: <span className="font-semibold">{r.preferredSiteVisitDate}</span>
+                          </p>
+                        )}
+                        {siteVisitEditMode === "edit" && r.siteVisitDate && (
+                          <p className="text-xs text-muted-foreground">
+                            Currently confirmed: <span className="font-semibold text-foreground">{r.siteVisitDate}</span>
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -1683,7 +1703,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
               )}
 
               <div className="flex gap-3 mt-5">
-                <button onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); }} className="btn-secondary flex-1">
+                <button onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); setSiteVisitEditMode("schedule"); }} className="btn-secondary flex-1">
                   Cancel
                 </button>
                 <button
@@ -1691,7 +1711,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                   disabled={!siteVisitDate}
                   className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
                 >
-                  Confirm
+                  {siteVisitEditMode === "edit" ? "Update Date" : "Confirm"}
                 </button>
               </div>
             </motion.div>
