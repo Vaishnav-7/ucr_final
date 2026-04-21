@@ -1,7 +1,9 @@
 /**
  * Global store for P&E meter recommendation messages.
- * Separate messages for Power and Water, editable by P&E staff.
+ * Persisted in Supabase (meter_recommendations table).
  */
+
+import { supabase } from "@/integrations/supabase/client";
 
 export interface PowerMeterRow {
   make: string;
@@ -10,10 +12,6 @@ export interface PowerMeterRow {
   ct: string;
   remark: string;
 }
-
-const ROWS_KEY = "meter-rec-power-rows";
-const POWER_NOTE_KEY = "meter-rec-power-note";
-const WATER_KEY = "meter-rec-water";
 
 const DEFAULT_ROWS: PowerMeterRow[] = [
   { make: "Saral", model: "Saral -305", conn: "1-phase", ct: "NO", remark: "For Load below 60 Amps" },
@@ -27,44 +25,72 @@ const DEFAULT_POWER_NOTE =
 const DEFAULT_WATER =
   "Only pulse enabled (AMR Compatibility) water meters to be installed to support Automated Meter Reading.";
 
-function loadJSON<T>(key: string, fallback: T): T {
-  try {
-    if (typeof window === "undefined") return fallback;
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-function loadString(key: string, fallback: string): string {
-  try {
-    if (typeof window === "undefined") return fallback;
-    const raw = window.localStorage.getItem(key);
-    return raw ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-function save(key: string, value: unknown) {
-  try {
-    window.localStorage.setItem(
-      key,
-      typeof value === "string" ? value : JSON.stringify(value),
-    );
-  } catch {
-    /* ignore */
-  }
-}
-
-let powerMeterRows: PowerMeterRow[] = loadJSON(ROWS_KEY, DEFAULT_ROWS);
-let powerFooterNote: string = loadString(POWER_NOTE_KEY, DEFAULT_POWER_NOTE);
-let waterRecommendation: string = loadString(WATER_KEY, DEFAULT_WATER);
+let powerMeterRows: PowerMeterRow[] = DEFAULT_ROWS;
+let powerFooterNote: string = DEFAULT_POWER_NOTE;
+let waterRecommendation: string = DEFAULT_WATER;
+let configId: string | null = null;
+let loaded = false;
 
 let listeners: Array<() => void> = [];
 
 function notify() {
   listeners.forEach((l) => l());
+}
+
+/** Load from Supabase on first access */
+async function ensureLoaded() {
+  if (loaded) return;
+  loaded = true;
+  try {
+    const { data, error } = await supabase
+      .from("meter_recommendations")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Failed to load meter recommendations:", error);
+      return;
+    }
+    if (data) {
+      configId = data.id;
+      powerMeterRows = (data.power_meter_rows as unknown as PowerMeterRow[]) ?? DEFAULT_ROWS;
+      powerFooterNote = data.power_footer_note ?? DEFAULT_POWER_NOTE;
+      waterRecommendation = data.water_recommendation ?? DEFAULT_WATER;
+      notify();
+    }
+  } catch (e) {
+    console.error("Failed to load meter recommendations:", e);
+  }
+}
+
+// Kick off loading immediately
+ensureLoaded();
+
+async function persistToDb() {
+  try {
+    const payload = {
+      power_meter_rows: JSON.parse(JSON.stringify(powerMeterRows)),
+      power_footer_note: powerFooterNote,
+      water_recommendation: waterRecommendation,
+      updated_at: new Date().toISOString(),
+    };
+    if (configId) {
+      await supabase
+        .from("meter_recommendations")
+        .update(payload)
+        .eq("id", configId);
+    } else {
+      const { data } = await supabase
+        .from("meter_recommendations")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (data) configId = data.id;
+    }
+  } catch (e) {
+    console.error("Failed to save meter recommendations:", e);
+  }
 }
 
 export function getPowerMeterRows(): PowerMeterRow[] {
@@ -73,8 +99,8 @@ export function getPowerMeterRows(): PowerMeterRow[] {
 
 export function setPowerMeterRows(rows: PowerMeterRow[]) {
   powerMeterRows = rows;
-  save(ROWS_KEY, rows);
   notify();
+  persistToDb();
 }
 
 export function getPowerFooterNote(): string {
@@ -83,8 +109,8 @@ export function getPowerFooterNote(): string {
 
 export function setPowerFooterNote(note: string) {
   powerFooterNote = note;
-  save(POWER_NOTE_KEY, note);
   notify();
+  persistToDb();
 }
 
 export function getWaterRecommendation(): string {
@@ -93,8 +119,8 @@ export function getWaterRecommendation(): string {
 
 export function setWaterRecommendation(msg: string) {
   waterRecommendation = msg;
-  save(WATER_KEY, msg);
   notify();
+  persistToDb();
 }
 
 /** @deprecated kept for compatibility */
@@ -103,9 +129,7 @@ export function getPowerRecommendation(): string {
 }
 /** @deprecated */
 export function setPowerRecommendation(msg: string) {
-  powerFooterNote = msg;
-  save(POWER_NOTE_KEY, msg);
-  notify();
+  setPowerFooterNote(msg);
 }
 /** @deprecated */
 export function getMeterRecommendation(): string {
@@ -113,9 +137,7 @@ export function getMeterRecommendation(): string {
 }
 /** @deprecated */
 export function setMeterRecommendation(msg: string) {
-  powerFooterNote = msg;
-  save(POWER_NOTE_KEY, msg);
-  notify();
+  setPowerFooterNote(msg);
 }
 
 export function subscribeMeterRecommendation(listener: () => void): () => void {
