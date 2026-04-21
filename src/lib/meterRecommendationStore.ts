@@ -69,24 +69,21 @@ ensureLoaded();
 
 async function persistToDb() {
   try {
+    const payload = {
+      power_meter_rows: JSON.parse(JSON.stringify(powerMeterRows)),
+      power_footer_note: powerFooterNote,
+      water_recommendation: waterRecommendation,
+      updated_at: new Date().toISOString(),
+    };
     if (configId) {
       await supabase
         .from("meter_recommendations")
-        .update({
-          power_meter_rows: powerMeterRows as unknown as Record<string, unknown>[],
-          power_footer_note: powerFooterNote,
-          water_recommendation: waterRecommendation,
-          updated_at: new Date().toISOString(),
-        })
+        .update(payload)
         .eq("id", configId);
     } else {
       const { data } = await supabase
         .from("meter_recommendations")
-        .insert({
-          power_meter_rows: powerMeterRows as unknown as Record<string, unknown>[],
-          power_footer_note: powerFooterNote,
-          water_recommendation: waterRecommendation,
-        })
+        .insert(payload)
         .select("id")
         .single();
       if (data) configId = data.id;
