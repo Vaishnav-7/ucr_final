@@ -12,6 +12,10 @@ import { useRequestStore, type ExtensionRequest } from "@/lib/requestStore";
 import { getPowerMeterRows, getPowerFooterNote, getWaterRecommendation, subscribeMeterRecommendation, type PowerMeterRow } from "@/lib/meterRecommendationStore";
 import { saveDocument, useDocumentStore } from "@/lib/documentStore";
 import DocumentLink from "./DocumentLink";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface ConnectionDashboardProps {
   onNewRequest: () => void;
@@ -127,6 +131,10 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
       const meterNeedsCustomer = !r.meterApproved && (!r.meterSubmitted || !!r.meterSliceRejectionReason);
       return sdNeedsCustomer || meterNeedsCustomer;
     }
+    // Slotting: customer's action is done once they've submitted a preferred date.
+    if (stage.id === "slotting") {
+      return !r.preferredSiteVisitDate;
+    }
     return stage.userActionRequired;
   });
   const progressRequests = requests.filter((r) => {
@@ -136,6 +144,10 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
       const sdNeedsCustomer = r.sdDecision === "pending" && (!r.sdSubmitted || !!r.sdSliceRejectionReason);
       const meterNeedsCustomer = !r.meterApproved && (!r.meterSubmitted || !!r.meterSliceRejectionReason);
       return !(sdNeedsCustomer || meterNeedsCustomer);
+    }
+    // Slotting: in-progress once preferred date submitted (waiting on P&E).
+    if (stage.id === "slotting" && r.stageIndex < stages.length - 1 && !r.rejectionReason) {
+      return !!r.preferredSiteVisitDate;
     }
     return r.stageIndex < stages.length - 1 && !stage.userActionRequired && !r.rejectionReason;
   });
