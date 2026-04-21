@@ -255,6 +255,24 @@ export function useRequestStore() {
     notify();
   }, []);
 
+  /** Customer submits (or updates) their preferred site visit date.
+   *  Stays at slotting stage — P&E still needs to accept/edit. */
+  const submitPreferredSiteVisitDate = useCallback((requestId: string, date: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId ? { ...r, preferredSiteVisitDate: date } : r,
+    );
+    notify();
+  }, []);
+
+  /** P&E updates the confirmed site visit date AFTER it was already scheduled
+   *  (allowed up until the site-visit-form is submitted). Does not change stage. */
+  const updateConfirmedSiteVisitDate = useCallback((requestId: string, date: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId ? { ...r, siteVisitDate: date } : r,
+    );
+    notify();
+  }, []);
+
   const setSdDecision = useCallback((requestId: string, decision: SdDecision, waiverProof?: string, sdAmount?: string) => {
     globalRequests = globalRequests.map((r) => {
       if (r.id !== requestId) return r;
@@ -447,6 +465,8 @@ export function useRequestStore() {
     rejectRequest,
     clearRejection,
     scheduleSiteVisit,
+    submitPreferredSiteVisitDate,
+    updateConfirmedSiteVisitDate,
     setSdDecision,
     updateConnectionType,
     requestExtension,
