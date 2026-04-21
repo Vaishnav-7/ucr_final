@@ -11,6 +11,7 @@ export const ROLES: RoleInfo[] = [
   { id: "finance", label: "Finance Team", description: "Verify payments and deposits" },
   { id: "spoc", label: "Department SPOC", description: "Approve security deposits and oversee workflow" },
   { id: "pne", label: "P&E Team", description: "Meter recommendations, slotting, and site visits" },
+  { id: "site-visit", label: "Site Visit", description: "Fill site visit forms for assigned requests" },
 ];
 
 // Maps workflow stage IDs to the role responsible for acting on them

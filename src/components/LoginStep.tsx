@@ -16,6 +16,7 @@ const MOBILE_ROLE_MAP: Record<string, UserRole> = {
   "9000000003": "finance",
   "9000000004": "pne",
   "9000000005": "spoc",   // Non-Aero SPOC
+  "9000000006": "site-visit",
 };
 
 // SPOC mobile → department mapping (used to filter their dashboard)
