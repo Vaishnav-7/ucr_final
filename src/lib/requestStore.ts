@@ -268,17 +268,26 @@ export function useRequestStore() {
         rejectionReason: undefined,
       };
 
-      if (decision === "pending") {
-        const sdPaymentIndex = findStageIndex("sd-payment");
-        updated.stageIndex = sdPaymentIndex >= 0 ? sdPaymentIndex : Math.min(r.stageIndex + 1, stages.length - 1);
-        return updated;
-      }
-
-      // Skip SD payment & finance confirms — go directly to meter step
-      const customerMeterIndex = findStageIndex("customer-meter-upload");
-      const meterRecIndex = findStageIndex("meter-recommendation");
-      const targetIndex = customerMeterIndex >= 0 ? customerMeterIndex : meterRecIndex >= 0 ? meterRecIndex : Math.min(r.stageIndex + 1, stages.length - 1);
+      // Combined parallel SD + Meter stage. Customer always lands here regardless of SD decision;
+      // when SD is waived/collected, the SD slice is auto-approved so only the meter slice remains.
+      const combinedIndex = findStageIndex("sd-and-meter");
+      const targetIndex =
+        combinedIndex >= 0
+          ? combinedIndex
+          : Math.min(r.stageIndex + 1, stages.length - 1);
       updated.stageIndex = targetIndex;
+
+      if (decision === "pending") {
+        // Customer must still upload SD proof; reset SD slice flags.
+        updated.sdSubmitted = false;
+        updated.sdApproved = false;
+        updated.sdSliceRejectionReason = undefined;
+      } else {
+        // Waived or collected → SD slice considered done immediately.
+        updated.sdSubmitted = true;
+        updated.sdApproved = true;
+        updated.sdSliceRejectionReason = undefined;
+      }
 
       return updated;
     });
