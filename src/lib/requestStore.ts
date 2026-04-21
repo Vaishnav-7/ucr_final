@@ -132,6 +132,46 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
   { id: "REQ-2024-006", utility: "Water", type: "New Meter", workflowType: "water-no-meter", address: "Warehouse 5, Sector 18", addressId: "ADDR-S004", stageIndex: 2, date: "2024-03-15" },
   { id: "REQ-2024-007", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", address: "Shop 3, Market Complex", addressId: "ADDR-S005", stageIndex: 1, date: "2024-03-18" },
   { id: "REQ-2024-008", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", address: "Shop 3, Market Complex", addressId: "ADDR-S005", stageIndex: 3, date: "2024-03-12" },
+
+  // ── Site Visit assignments (stage = site-visit-form) — fully detailed for site-visit role ──
+  {
+    id: "REQ-2024-201", utility: "Power", type: "Postpaid", workflowType: "power-regular",
+    address: "Tower B, Floor 12, Cyber City, Sector 24", addressId: "ADDR-S010", spaceId: "SPC-1042",
+    stageIndex: 5, date: "2024-03-22", siteVisitDate: "12 April 2024",
+    userDetails: { customerName: "Nimbus Analytics Pvt Ltd", customerCode: "CC-7012", contactPerson: "Vikram Joshi", mobile: "9811223344", email: "vikram@nimbus.io" },
+    loadData: { method: "calculator", totalKVA: 75.5, totalKVAH: 540, appliances: [] },
+    selectedMeter: { make: "Secure", model: "Elite 444", conn: "3-Phase 4-Wire", ct: "Yes", remark: "CT 100/5A required" },
+    sdDecision: "collected", sdAmount: "45000",
+  },
+  {
+    id: "REQ-2024-202", utility: "Power", type: "Temporary", workflowType: "power-temporary",
+    address: "Construction Site, Plot 22, Industrial Phase-III", addressId: "ADDR-S011", spaceId: "SPC-2210",
+    stageIndex: 4, date: "2024-03-25", expiry: "2024-09-25", siteVisitDate: "15 April 2024",
+    userDetails: { customerName: "Skyline Constructions", customerCode: "CC-8045", contactPerson: "Deepak Mehra", mobile: "9822334455", email: "deepak@skylinecons.in" },
+    loadData: { method: "upload", totalKVA: 200, totalKVAH: 1600, docUploaded: true },
+    selectedMeter: { make: "L&T", model: "ER300P", conn: "3-Phase 4-Wire", ct: "Yes", remark: "Outdoor enclosure" },
+    sdDecision: "collected", sdAmount: "120000",
+  },
+  {
+    id: "REQ-2024-203", utility: "Power", type: "Prepaid", workflowType: "power-prepaid",
+    address: "Shop 18, Plaza Arcade, Main Market Road", addressId: "ADDR-S012", spaceId: "SPC-3301",
+    stageIndex: 3, date: "2024-03-28", siteVisitDate: "16 April 2024",
+    userDetails: { customerName: "Café Aroma", customerCode: "CC-9077", contactPerson: "Neha Kapoor", mobile: "9833445566", email: "neha@cafearoma.in" },
+  },
+  {
+    id: "REQ-2024-204", utility: "Water", type: "Existing Meter", workflowType: "water-existing-meter",
+    address: "Office Tower 3, Wing B, Trade Centre, Sector 5", addressId: "ADDR-S013", spaceId: "SPC-4412",
+    stageIndex: 3, date: "2024-04-01", siteVisitDate: "18 April 2024",
+    userDetails: { customerName: "Aquaflow Services", customerCode: "CC-1108", contactPerson: "Sanjay Verma", mobile: "9844556677", email: "sanjay@aquaflow.co" },
+    waterDemand: { domesticKL: 18, flushingKL: 6, roKL: 4, totalKL: 28 },
+  },
+  {
+    id: "REQ-2024-205", utility: "Water", type: "New Meter", workflowType: "water-no-meter",
+    address: "Warehouse 11, Logistics Park, Sector 22", addressId: "ADDR-S014", spaceId: "SPC-5523",
+    stageIndex: 5, date: "2024-04-03", siteVisitDate: "20 April 2024",
+    userDetails: { customerName: "GreenLeaf Foods Pvt Ltd", customerCode: "CC-1209", contactPerson: "Pooja Iyer", mobile: "9855667788", email: "pooja@greenleaf.in" },
+    waterDemand: { domesticKL: 30, flushingKL: 12, roKL: 10, totalKL: 52 },
+  },
 ];
 
 let globalRequests: ConnectionRequest[] = [...INITIAL_REQUESTS];
