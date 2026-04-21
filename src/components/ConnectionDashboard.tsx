@@ -61,6 +61,20 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
     if (!req) return;
 
     const currentStage = getCurrentStage(req.workflowType, req.stageIndex);
+
+    // Combined parallel SD + Meter stage: route each action to its slice instead of advancing.
+    if (currentStage.id === "sd-and-meter") {
+      if (activeAction.label === "Upload SD Payment Proof") {
+        submitSdSlice(activeRequestId);
+      } else if (activeAction.label === "Upload Calibration Certificate") {
+        submitMeterSlice(activeRequestId);
+      }
+      setModalOpen(false);
+      setActiveRequestId(null);
+      setActiveAction(null);
+      return;
+    }
+
     // For water meter-purchase, use dynamic actions count
     const dynamicActions = (currentStage.id === "meter-purchase" && req.utility === "Water" && req.waterDemand)
       ? getWaterMeterUploadActions(req.waterDemand)
