@@ -862,6 +862,66 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                     const dynamicActions = (currentStage.id === "meter-purchase" && req.utility === "Water" && req.waterDemand)
                       ? getWaterMeterUploadActions(req.waterDemand)
                       : currentStage.actions;
+                    // Slotting stage — customer proposes a preferred site visit date.
+                    if (currentStage.id === "slotting") {
+                      const hasProposed = !!req.preferredSiteVisitDate;
+                      const draft = slotDateDraft[req.id];
+                      const isOpen = slotPickerOpen === req.id;
+                      return (
+                        <div className="mt-4 pt-3 border-t border-border/50 space-y-3">
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            {hasProposed
+                              ? "Awaiting P&E to confirm or change your preferred date"
+                              : "Pick your preferred site visit date — P&E will then confirm or adjust it"}
+                          </p>
+                          {hasProposed && (
+                            <div className="p-3 rounded-lg bg-info/5 border border-info/15 flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-info" />
+                              <p className="text-sm text-info font-medium">
+                                Preferred date: {req.preferredSiteVisitDate}
+                              </p>
+                            </div>
+                          )}
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <Popover open={isOpen} onOpenChange={(o) => setSlotPickerOpen(o ? req.id : null)}>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className={cn(
+                                    "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97]",
+                                    "bg-accent/10 text-accent hover:bg-accent/20",
+                                  )}
+                                >
+                                  <Calendar className="w-3.5 h-3.5" />
+                                  {draft ? format(draft, "dd MMMM yyyy") : (hasProposed ? "Change Preferred Date" : "Select Preferred Date")}
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <CalendarPicker
+                                  mode="single"
+                                  selected={draft}
+                                  onSelect={(d) => setSlotDateDraft((s) => ({ ...s, [req.id]: d }))}
+                                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                  className={cn("p-3 pointer-events-auto")}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <button
+                              disabled={!draft}
+                              onClick={() => {
+                                if (!draft) return;
+                                submitPreferredSiteVisitDate(req.id, format(draft, "dd MMMM yyyy"));
+                                setSlotDateDraft((s) => ({ ...s, [req.id]: undefined }));
+                                setSlotPickerOpen(null);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              {hasProposed ? "Update Preferred Date" : "Submit Preferred Date"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
                     const requiresMeterSelection =
                       req.utility === "Power" &&
                       (currentStage.id === "customer-meter-upload" || currentStage.id === "meter-recommendation") &&
