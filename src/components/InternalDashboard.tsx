@@ -1603,8 +1603,29 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                           onClick={() => handleApprove(req.id)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-success/10 text-success hover:bg-success/20 transition-all active:scale-[0.97]"
                         >
-                          <CheckCircle2 className="w-4 h-4" /> {(role === "pne" || role === "spoc") && (currentStage.id === "site-visit" || currentStage.id === "slotting") ? "Schedule Slot" : currentStage.id === "site-visit-form" ? "Fill Site Visit Form" : "Approve"}
+                          <CheckCircle2 className="w-4 h-4" /> {(role === "pne" || role === "spoc") && currentStage.id === "site-visit" ? "Schedule Slot" : (role === "pne" || role === "spoc") && currentStage.id === "slotting" ? "Accept / Change Date" : currentStage.id === "site-visit-form" ? "Fill Site Visit Form" : "Approve"}
                         </button>
+                        {/* P&E can keep changing the confirmed date even after slotting,
+                            up until the site visit form is submitted. */}
+                        {(role === "pne" || role === "spoc") && currentStage.id === "site-visit-form" && (
+                          <button
+                            onClick={() => {
+                              setSiteVisitReqId(req.id);
+                              setSiteVisitEditMode("edit");
+                              const cur = req.siteVisitDate || req.preferredSiteVisitDate;
+                              if (cur) {
+                                const parsed = new Date(cur);
+                                setSiteVisitDate(isNaN(parsed.getTime()) ? undefined : parsed);
+                              } else {
+                                setSiteVisitDate(undefined);
+                              }
+                            }}
+                            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-info/10 text-info hover:bg-info/20 transition-all active:scale-[0.97]"
+                            title="Change confirmed site visit date"
+                          >
+                            <CalendarIcon className="w-4 h-4" /> Change Date
+                          </button>
+                        )}
                         <button
                           onClick={() => setRejectModalId(req.id)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all active:scale-[0.97]"
