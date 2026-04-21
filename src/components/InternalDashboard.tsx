@@ -1664,12 +1664,12 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); setSiteVisitEditMode("schedule"); }} />
+            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); setSiteVisitorName(""); setSiteVisitorMobile(""); setSiteVisitEditMode("schedule"); }} />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative z-10 w-full max-w-sm glass-card-elevated p-6"
+              className="relative z-10 w-full max-w-sm max-h-[90vh] overflow-y-auto glass-card-elevated p-6"
             >
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center">
@@ -1715,16 +1715,53 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                 </p>
               )}
 
+              {/* Assign site-visit operative */}
+              <div className="mt-5 pt-5 border-t border-border space-y-3">
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <User className="w-4 h-4 text-primary" /> Assign Site Visitor
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    The mobile number entered here will be used by the site visitor to log in and see this request.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-foreground mb-1">Name</label>
+                  <input
+                    type="text"
+                    value={siteVisitorName}
+                    onChange={(e) => setSiteVisitorName(e.target.value)}
+                    placeholder="e.g. Ramesh Kumar"
+                    className="input-glass w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-foreground mb-1">Mobile</label>
+                  <input
+                    type="tel"
+                    value={siteVisitorMobile}
+                    onChange={(e) => setSiteVisitorMobile(e.target.value)}
+                    placeholder="10-digit mobile"
+                    maxLength={15}
+                    className="input-glass w-full"
+                  />
+                </div>
+              </div>
+
               <div className="flex gap-3 mt-5">
-                <button onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); setSiteVisitEditMode("schedule"); }} className="btn-secondary flex-1">
+                <button onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); setSiteVisitorName(""); setSiteVisitorMobile(""); setSiteVisitEditMode("schedule"); }} className="btn-secondary flex-1">
                   Cancel
                 </button>
                 <button
                   onClick={handleScheduleSiteVisit}
-                  disabled={!siteVisitDate}
+                  disabled={
+                    !siteVisitDate ||
+                    !siteVisitorName.trim() ||
+                    siteVisitorMobile.replace(/\D/g, "").slice(-10).length !== 10
+                  }
                   className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
                 >
-                  {siteVisitEditMode === "edit" ? "Update Date" : "Confirm"}
+                  {siteVisitEditMode === "edit" ? "Update" : "Confirm"}
                 </button>
               </div>
             </motion.div>
