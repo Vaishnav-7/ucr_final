@@ -31,6 +31,11 @@ export const STAGE_ROLE_MAP: Record<string, UserRole> = {
 
   "meter-recommendation": "user",
 
+  // Combined parallel SD + Meter stage. Default owner is the user (customer needs to upload).
+  // Routing to Finance / P&E for the respective slice is handled dynamically based on
+  // sub-state flags (see InternalDashboard).
+  "sd-and-meter": "user",
+
   // Water no-meter
   "meter-purchase": "user",
 
