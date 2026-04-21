@@ -84,6 +84,9 @@ export interface ConnectionRequest {
   meterSubmitted?: boolean;
   meterApproved?: boolean;
   meterSliceRejectionReason?: string;
+  /** Site-visit operative assigned by P&E when scheduling the visit. The mobile
+   *  acts as their login credential for the Site Visit dashboard. */
+  siteVisitor?: { name: string; mobile: string };
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [
@@ -141,6 +144,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     },
     selectedMeter: { make: "Secure", model: "Elite 444", conn: "3-Phase 4-Wire", ct: "Yes", remark: "CT 100/5A required" },
     sdDecision: "collected",
+    siteVisitor: { name: "Ramesh Kumar", mobile: "9000000006" },
   },
   {
     id: "REQ-2024-202", utility: "Power", type: "Temporary", workflowType: "power-temporary",
@@ -150,6 +154,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     loadData: { method: "upload", totalKVA: 200, totalKVAH: 1600, docUploaded: true },
     selectedMeter: { make: "L&T", model: "ER300P", conn: "3-Phase 4-Wire", ct: "Yes", remark: "Outdoor enclosure" },
     sdDecision: "collected",
+    siteVisitor: { name: "Ramesh Kumar", mobile: "9000000006" },
   },
   {
     id: "REQ-2024-204", utility: "Water", type: "Existing Meter", workflowType: "water-existing-meter",
@@ -157,6 +162,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     stageIndex: 3, date: "2024-04-01", siteVisitDate: "18 April 2024",
     userDetails: { customerName: "Aquaflow Services", customerCode: "CC-1108", contactPerson: "Sanjay Verma", mobile: "9844556677", email: "sanjay@aquaflow.co" },
     waterDemand: { domesticKL: 18, flushingKL: 6, roKL: 4, totalKL: 28 },
+    siteVisitor: { name: "Anita Shetty", mobile: "9000000007" },
   },
   {
     id: "REQ-2024-205", utility: "Water", type: "New Meter", workflowType: "water-no-meter",
@@ -164,6 +170,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     stageIndex: 5, date: "2024-04-03", siteVisitDate: "20 April 2024",
     userDetails: { customerName: "GreenLeaf Foods Pvt Ltd", customerCode: "CC-1209", contactPerson: "Pooja Iyer", mobile: "9855667788", email: "pooja@greenleaf.in" },
     waterDemand: { domesticKL: 30, flushingKL: 12, roKL: 10, totalKL: 52 },
+    siteVisitor: { name: "Ramesh Kumar", mobile: "9000000006" },
   },
 ];
 
@@ -213,6 +220,13 @@ export function rekeyRequestMobile(oldMobile: string, newMobile: string) {
   notify();
 }
 
+/** Returns true if any request currently has a site-visitor assignment for this mobile.
+ *  Used by the login screen to detect site-visit role from mobile. */
+export function isSiteVisitorMobile(mobile: string): boolean {
+  const norm = mobile.replace(/\D/g, "").slice(-10);
+  if (!norm) return false;
+  return globalRequests.some((r) => r.siteVisitor?.mobile === norm);
+}
 export function useRequestStore() {
   const [, setTick] = useState(0);
 
@@ -279,11 +293,14 @@ export function useRequestStore() {
     notify();
   }, []);
 
-  const scheduleSiteVisit = useCallback((requestId: string, date: string) => {
+  const scheduleSiteVisit = useCallback((requestId: string, date: string, siteVisitor?: { name: string; mobile: string }) => {
     globalRequests = globalRequests.map((r) => {
       if (r.id !== requestId) return r;
       const stages = getWorkflowStages(r.workflowType);
-      return { ...r, siteVisitDate: date, stageIndex: Math.min(r.stageIndex + 1, stages.length - 1) };
+      const sv = siteVisitor && siteVisitor.name.trim() && siteVisitor.mobile.trim()
+        ? { name: siteVisitor.name.trim(), mobile: siteVisitor.mobile.replace(/\D/g, "").slice(-10) }
+        : r.siteVisitor;
+      return { ...r, siteVisitDate: date, siteVisitor: sv, stageIndex: Math.min(r.stageIndex + 1, stages.length - 1) };
     });
     notify();
   }, []);
@@ -299,10 +316,14 @@ export function useRequestStore() {
 
   /** P&E updates the confirmed site visit date AFTER it was already scheduled
    *  (allowed up until the site-visit-form is submitted). Does not change stage. */
-  const updateConfirmedSiteVisitDate = useCallback((requestId: string, date: string) => {
-    globalRequests = globalRequests.map((r) =>
-      r.id === requestId ? { ...r, siteVisitDate: date } : r,
-    );
+  const updateConfirmedSiteVisitDate = useCallback((requestId: string, date: string, siteVisitor?: { name: string; mobile: string }) => {
+    globalRequests = globalRequests.map((r) => {
+      if (r.id !== requestId) return r;
+      const sv = siteVisitor && siteVisitor.name.trim() && siteVisitor.mobile.trim()
+        ? { name: siteVisitor.name.trim(), mobile: siteVisitor.mobile.replace(/\D/g, "").slice(-10) }
+        : r.siteVisitor;
+      return { ...r, siteVisitDate: date, siteVisitor: sv };
+    });
     notify();
   }, []);
 

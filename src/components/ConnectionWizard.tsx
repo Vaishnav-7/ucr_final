@@ -117,7 +117,8 @@ const ConnectionWizard = () => {
   };
 
   if (showDashboard && userRole === "site-visit") {
-    return <SiteVisitDashboard onLogout={handleLogout} />;
+    const userMobile = wizardData.login?.mobile as string | undefined;
+    return <SiteVisitDashboard userMobile={userMobile} onLogout={handleLogout} />;
   }
 
   if (showDashboard && userRole && userRole !== "user") {
