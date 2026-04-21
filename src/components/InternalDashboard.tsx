@@ -38,7 +38,7 @@ interface InternalDashboardProps {
 type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad, approveSdSlice, approveMeterSlice, rejectSdSlice, rejectMeterSlice } = useRequestStore();
   const ccStore = useCcRequestStore();
   const customerStore = useCustomerStore();
   const { getDocumentsForRequest } = useDocumentStore();
@@ -131,12 +131,26 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
   const visibleRequests = requests.filter(requestBelongsToMe);
 
+  /** For the combined parallel SD+Meter stage, decide whether THIS role has a slice waiting. */
+  const combinedStagePendingForRole = (r: ConnectionRequest): boolean => {
+    if (role === "finance") {
+      return r.sdDecision === "pending" && !!r.sdSubmitted && !r.sdApproved;
+    }
+    if (role === "pne") {
+      return !!r.meterSubmitted && !r.meterApproved;
+    }
+    return false;
+  };
+
   // All requests where current stage belongs to this role and not completed → "Take Action"
   const myPendingRequests = visibleRequests.filter((r) => {
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
     const stageRole = STAGE_ROLE_MAP[stage.id];
     const stages = getWorkflowStages(r.workflowType);
     const isCompleted = r.stageIndex >= stages.length - 1;
+    if (stage.id === "sd-and-meter") {
+      return !isCompleted && !r.rejectionReason && combinedStagePendingForRole(r);
+    }
     return stageRole === role && !isCompleted && !r.rejectionReason;
   });
 
@@ -152,6 +166,9 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
     const stageRole = STAGE_ROLE_MAP[stage.id];
     const isCompleted = r.stageIndex >= stages.length - 1;
+    if (stage.id === "sd-and-meter") {
+      return !isCompleted && !r.rejectionReason && !combinedStagePendingForRole(r);
+    }
     // Active but not awaiting this role's action and not rejected
     return !isCompleted && !r.rejectionReason && stageRole !== role;
   });
@@ -181,6 +198,13 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     if (!req) return;
 
     const stage = getCurrentStage(req.workflowType, req.stageIndex);
+
+    // Combined parallel SD + Meter stage: approve only this role's slice.
+    if (stage.id === "sd-and-meter") {
+      if (role === "finance") approveSdSlice(reqId);
+      else if (role === "pne") approveMeterSlice(reqId);
+      return;
+    }
 
     // SPOC SD decision gate for power workflows
     const isSdGateStage = ["spoc-approval", "sd-decision", "sd-calculation"].includes(stage.id);
@@ -245,7 +269,14 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
   const handleReject = () => {
     if (rejectModalId && rejectReason.trim()) {
-      rejectRequest(rejectModalId, rejectReason.trim());
+      const req = requests.find((r) => r.id === rejectModalId);
+      const stage = req ? getCurrentStage(req.workflowType, req.stageIndex) : null;
+      if (stage?.id === "sd-and-meter") {
+        if (role === "finance") rejectSdSlice(rejectModalId, rejectReason.trim());
+        else if (role === "pne") rejectMeterSlice(rejectModalId, rejectReason.trim());
+      } else {
+        rejectRequest(rejectModalId, rejectReason.trim());
+      }
       setRejectModalId(null);
       setRejectReason("");
     }
@@ -1082,7 +1113,11 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                 const timelineLabels = getTimelineLabels(req.workflowType);
                 const isExpanded = expandedId === req.id;
                 const isCompleted = req.stageIndex >= stages.length - 1;
-                const isMine = STAGE_ROLE_MAP[currentStage.id] === role && !isCompleted;
+                const isMine = !isCompleted && (
+                  currentStage.id === "sd-and-meter"
+                    ? combinedStagePendingForRole(req)
+                    : STAGE_ROLE_MAP[currentStage.id] === role
+                );
 
                 return (
                   <motion.div
@@ -1273,7 +1308,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                               <span className="text-muted-foreground">Current Stage:</span>
                               <span className="ml-2 text-foreground font-medium">
                                 {currentStage.label}
-                                {currentStage.id === "sd-payment" && req.sdDecision === "pending" && req.sdAmount && (
+                                {(currentStage.id === "sd-payment" || currentStage.id === "sd-and-meter") && req.sdDecision === "pending" && req.sdAmount && (
                                   <span className="ml-1 text-accent font-semibold">(₹{Number(req.sdAmount).toLocaleString("en-IN")})</span>
                                 )}
                               </span>

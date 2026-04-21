@@ -21,7 +21,7 @@ interface ConnectionDashboardProps {
 type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProps) => {
-  const { requests, advanceStage, markActionCompleted, clearRejection, requestExtension, deactivateConnection, selectPowerMeter } = useRequestStore();
+  const { requests, advanceStage, markActionCompleted, clearRejection, requestExtension, deactivateConnection, selectPowerMeter, submitSdSlice, submitMeterSlice } = useRequestStore();
   const { getDocumentsForRequest } = useDocumentStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
@@ -61,6 +61,20 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
     if (!req) return;
 
     const currentStage = getCurrentStage(req.workflowType, req.stageIndex);
+
+    // Combined parallel SD + Meter stage: route each action to its slice instead of advancing.
+    if (currentStage.id === "sd-and-meter") {
+      if (activeAction.label === "Upload SD Payment Proof") {
+        submitSdSlice(activeRequestId);
+      } else if (activeAction.label === "Upload Calibration Certificate") {
+        submitMeterSlice(activeRequestId);
+      }
+      setModalOpen(false);
+      setActiveRequestId(null);
+      setActiveAction(null);
+      return;
+    }
+
     // For water meter-purchase, use dynamic actions count
     const dynamicActions = (currentStage.id === "meter-purchase" && req.utility === "Water" && req.waterDemand)
       ? getWaterMeterUploadActions(req.waterDemand)
@@ -103,11 +117,22 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
     if (r.stageIndex >= stages.length - 1) return false;
     if (r.rejectionReason) return isActionableRejection(r);
+    // Combined parallel stage: only "Take Action" if there's actually something pending the customer.
+    if (stage.id === "sd-and-meter") {
+      const sdNeedsCustomer = r.sdDecision === "pending" && (!r.sdSubmitted || !!r.sdSliceRejectionReason);
+      const meterNeedsCustomer = !r.meterApproved && (!r.meterSubmitted || !!r.meterSliceRejectionReason);
+      return sdNeedsCustomer || meterNeedsCustomer;
+    }
     return stage.userActionRequired;
   });
   const progressRequests = requests.filter((r) => {
     const stages = getWorkflowStages(r.workflowType);
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
+    if (stage.id === "sd-and-meter" && r.stageIndex < stages.length - 1 && !r.rejectionReason) {
+      const sdNeedsCustomer = r.sdDecision === "pending" && (!r.sdSubmitted || !!r.sdSliceRejectionReason);
+      const meterNeedsCustomer = !r.meterApproved && (!r.meterSubmitted || !!r.meterSliceRejectionReason);
+      return !(sdNeedsCustomer || meterNeedsCustomer);
+    }
     return r.stageIndex < stages.length - 1 && !stage.userActionRequired && !r.rejectionReason;
   });
 
@@ -377,7 +402,7 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                             <span className="text-muted-foreground">Current Stage:</span>
                             <span className="ml-2 text-foreground font-medium">
                               {currentStage.label}
-                              {currentStage.id === "sd-payment" && req.sdDecision === "pending" && req.sdAmount && (
+                              {(currentStage.id === "sd-payment" || currentStage.id === "sd-and-meter") && req.sdDecision === "pending" && req.sdAmount && (
                                 <span className="ml-1 text-accent font-semibold">(₹{Number(req.sdAmount).toLocaleString("en-IN")})</span>
                               )}
                             </span>
@@ -650,7 +675,7 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
                   )}
 
                   {/* Power Meter Recommendations */}
-                  {actionRequired && (currentStage.id === "customer-meter-upload" || currentStage.id === "meter-recommendation") && req.utility === "Power" && (
+                  {actionRequired && (currentStage.id === "customer-meter-upload" || currentStage.id === "meter-recommendation" || currentStage.id === "sd-and-meter") && req.utility === "Power" && !req.meterApproved && (
                     <div className="mt-3">
                       <button
                         onClick={() => setMeterRecsOpen(meterRecsOpen === req.id ? null : req.id)}
@@ -729,6 +754,94 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
 
                   {/* Action Buttons */}
                   {actionRequired && (() => {
+                    // Combined parallel SD + Meter stage — render slice-aware buttons.
+                    if (currentStage.id === "sd-and-meter") {
+                      const sdNeeded = req.sdDecision === "pending";
+                      const sdAwaiting = sdNeeded && req.sdSubmitted && !req.sdApproved && !req.sdSliceRejectionReason;
+                      const sdRejected = !!req.sdSliceRejectionReason;
+                      const meterAwaiting = req.meterSubmitted && !req.meterApproved && !req.meterSliceRejectionReason;
+                      const meterRejected = !!req.meterSliceRejectionReason;
+                      const meterBlocked = !req.selectedMeter;
+                      const sdAction = currentStage.actions?.find((a) => a.label === "Upload SD Payment Proof");
+                      const meterAction = currentStage.actions?.find((a) => a.label === "Upload Calibration Certificate");
+                      return (
+                        <div className="mt-4 pt-3 border-t border-border/50 space-y-2">
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            Both steps run in parallel — proceeds to Slotting only after both are approved
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {/* SD slice */}
+                            {sdNeeded && sdAction && !req.sdApproved && (
+                              <button
+                                onClick={() => !sdAwaiting && handleActionClick(req.id, sdAction)}
+                                disabled={sdAwaiting}
+                                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
+                                  sdAwaiting
+                                    ? "bg-warning/10 text-warning cursor-wait"
+                                    : sdRejected
+                                      ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                      : "bg-accent/10 text-accent hover:bg-accent/20"
+                                }`}
+                              >
+                                {sdAwaiting ? <Clock className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                                {sdAwaiting
+                                  ? "SD Proof — Awaiting Finance Approval"
+                                  : sdRejected
+                                    ? "Re-upload SD Payment Proof"
+                                    : sdAction.label}
+                              </button>
+                            )}
+                            {req.sdApproved && (
+                              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-success/10 text-success">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                {sdNeeded ? "SD Payment Approved" : req.sdDecision === "waived" ? "SD Waived" : "SD Already Collected"}
+                              </span>
+                            )}
+
+                            {/* Meter slice */}
+                            {meterAction && !req.meterApproved && (
+                              <button
+                                onClick={() => !meterAwaiting && !meterBlocked && handleActionClick(req.id, meterAction)}
+                                disabled={meterAwaiting || meterBlocked}
+                                title={meterBlocked ? "Select a meter from the recommendations first" : undefined}
+                                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
+                                  meterAwaiting
+                                    ? "bg-warning/10 text-warning cursor-wait"
+                                    : meterBlocked
+                                      ? "bg-muted/60 text-muted-foreground cursor-not-allowed"
+                                      : meterRejected
+                                        ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                        : "bg-accent/10 text-accent hover:bg-accent/20"
+                                }`}
+                              >
+                                {meterAwaiting ? <Clock className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                                {meterAwaiting
+                                  ? "Calibration Cert — Awaiting P&E Approval"
+                                  : meterRejected
+                                    ? "Re-upload Calibration Certificate"
+                                    : meterAction.label}
+                              </button>
+                            )}
+                            {req.meterApproved && (
+                              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-success/10 text-success">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Calibration Approved
+                              </span>
+                            )}
+                          </div>
+                          {(sdRejected || meterRejected) && (
+                            <div className="space-y-1">
+                              {sdRejected && (
+                                <p className="text-xs text-destructive">⚠ SD rejected: {req.sdSliceRejectionReason}</p>
+                              )}
+                              {meterRejected && (
+                                <p className="text-xs text-destructive">⚠ Calibration rejected: {req.meterSliceRejectionReason}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
                     // For water meter-purchase, generate dynamic per-category actions
                     const dynamicActions = (currentStage.id === "meter-purchase" && req.utility === "Water" && req.waterDemand)
                       ? getWaterMeterUploadActions(req.waterDemand)

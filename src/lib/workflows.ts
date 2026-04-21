@@ -54,6 +54,14 @@ const METER_ACTIONS: WorkflowAction[] = [
   },
 ];
 
+/** Parallel stage: customer can upload SD payment proof AND meter calibration cert in any order.
+ *  Each upload routes to its respective approver (Finance for SD, P&E for calibration).
+ *  Stage advances to Slotting only after BOTH are approved. */
+const SD_AND_METER_ACTIONS: WorkflowAction[] = [
+  SD_UPLOAD_ACTION,
+  ...METER_ACTIONS,
+];
+
 const SITE_VISIT_FORM_ACTION: WorkflowAction = {
   label: "Site Visit Form",
   type: "confirm",
@@ -158,10 +166,7 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "spoc-approval", label: "SPOC Approval", userActionRequired: false },
     { id: "sd-decision", label: "SD Decision", userActionRequired: false },
-    { id: "sd-payment", label: "SD Payment", userActionRequired: true, actions: [SD_UPLOAD_ACTION] },
-    { id: "finance-confirms", label: "SD Verification", userActionRequired: false },
-    { id: "customer-meter-upload", label: "Meter Purchase & Calibration", userActionRequired: true, actions: METER_ACTIONS },
-    { id: "calibration-uploaded", label: "Calibration Certificate Uploaded", userActionRequired: false },
+    { id: "sd-and-meter", label: "SD Payment & Meter Setup", userActionRequired: true, actions: SD_AND_METER_ACTIONS },
     { id: "slotting", label: "Slotting", userActionRequired: false },
     { id: "site-visit-form", label: "Site Visit Form", userActionRequired: false, actions: [SITE_VISIT_FORM_ACTION] },
     { id: "activated", label: "Connection Activated", userActionRequired: false },
@@ -176,10 +181,7 @@ export const WORKFLOWS: Record<WorkflowType, WorkflowStage[]> = {
   "power-temporary": [
     { id: "submitted", label: "Submitted", userActionRequired: false },
     { id: "sd-calculation", label: "SD Calculation", userActionRequired: false },
-    { id: "sd-payment", label: "SD Payment", userActionRequired: true, actions: [SD_UPLOAD_ACTION] },
-    { id: "finance-confirms", label: "SD Verification", userActionRequired: false },
-    { id: "meter-recommendation", label: "Meter Recommendation", userActionRequired: true, actions: METER_ACTIONS },
-    { id: "calibration-uploaded", label: "Calibration Certificate Uploaded", userActionRequired: false },
+    { id: "sd-and-meter", label: "SD Payment & Meter Setup", userActionRequired: true, actions: SD_AND_METER_ACTIONS },
     { id: "slotting", label: "Slotting", userActionRequired: false },
     { id: "site-visit-form", label: "Site Visit Form", userActionRequired: false, actions: [SITE_VISIT_FORM_ACTION] },
     { id: "activated", label: "Temp Activated", userActionRequired: false },

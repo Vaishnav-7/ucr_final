@@ -74,6 +74,14 @@ export interface ConnectionRequest {
   rejectedFromStageId?: string;
   /** Meter chosen by the customer from the P&E recommendations (Power workflows). */
   selectedMeter?: PowerMeterRow;
+  /** Combined SD+Meter parallel stage sub-state. Customer can submit either slice
+   *  in any order; the stage advances only when both sliceApproved flags are true. */
+  sdSubmitted?: boolean;
+  sdApproved?: boolean;
+  sdSliceRejectionReason?: string;
+  meterSubmitted?: boolean;
+  meterApproved?: boolean;
+  meterSliceRejectionReason?: string;
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [
@@ -185,6 +193,13 @@ export function useRequestStore() {
     globalRequests = globalRequests.map((r) => {
       if (r.id !== requestId) return r;
       const stages = getWorkflowStages(r.workflowType);
+      const currentStage = stages[Math.min(r.stageIndex, stages.length - 1)];
+      // For the combined parallel SD+Meter stage, only advance when BOTH slices are approved.
+      if (currentStage?.id === "sd-and-meter") {
+        const sdDone = r.sdDecision !== "pending" || r.sdApproved;
+        const meterDone = !!r.meterApproved;
+        if (!(sdDone && meterDone)) return r;
+      }
       const newIndex = Math.min(r.stageIndex + 1, stages.length - 1);
       // Clear the red rejected-stage marker once we successfully pass that stage again.
       const rejectedIdx = r.rejectedFromStageId ? stages.findIndex((s) => s.id === r.rejectedFromStageId) : -1;
@@ -253,17 +268,26 @@ export function useRequestStore() {
         rejectionReason: undefined,
       };
 
-      if (decision === "pending") {
-        const sdPaymentIndex = findStageIndex("sd-payment");
-        updated.stageIndex = sdPaymentIndex >= 0 ? sdPaymentIndex : Math.min(r.stageIndex + 1, stages.length - 1);
-        return updated;
-      }
-
-      // Skip SD payment & finance confirms — go directly to meter step
-      const customerMeterIndex = findStageIndex("customer-meter-upload");
-      const meterRecIndex = findStageIndex("meter-recommendation");
-      const targetIndex = customerMeterIndex >= 0 ? customerMeterIndex : meterRecIndex >= 0 ? meterRecIndex : Math.min(r.stageIndex + 1, stages.length - 1);
+      // Combined parallel SD + Meter stage. Customer always lands here regardless of SD decision;
+      // when SD is waived/collected, the SD slice is auto-approved so only the meter slice remains.
+      const combinedIndex = findStageIndex("sd-and-meter");
+      const targetIndex =
+        combinedIndex >= 0
+          ? combinedIndex
+          : Math.min(r.stageIndex + 1, stages.length - 1);
       updated.stageIndex = targetIndex;
+
+      if (decision === "pending") {
+        // Customer must still upload SD proof; reset SD slice flags.
+        updated.sdSubmitted = false;
+        updated.sdApproved = false;
+        updated.sdSliceRejectionReason = undefined;
+      } else {
+        // Waived or collected → SD slice considered done immediately.
+        updated.sdSubmitted = true;
+        updated.sdApproved = true;
+        updated.sdSliceRejectionReason = undefined;
+      }
 
       return updated;
     });
@@ -347,6 +371,73 @@ export function useRequestStore() {
     notify();
   }, []);
 
+  /** Customer submits SD payment proof on the combined parallel stage → routes to Finance. */
+  const submitSdSlice = useCallback((requestId: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId
+        ? { ...r, sdSubmitted: true, sdApproved: false, sdSliceRejectionReason: undefined }
+        : r,
+    );
+    notify();
+  }, []);
+
+  /** Customer submits meter calibration cert on the combined parallel stage → routes to P&E. */
+  const submitMeterSlice = useCallback((requestId: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId
+        ? { ...r, meterSubmitted: true, meterApproved: false, meterSliceRejectionReason: undefined }
+        : r,
+    );
+    notify();
+  }, []);
+
+  /** Finance approves the SD slice. If meter slice is also approved, advance to next stage. */
+  const approveSdSlice = useCallback((requestId: string) => {
+    globalRequests = globalRequests.map((r) => {
+      if (r.id !== requestId) return r;
+      const updated = { ...r, sdApproved: true, sdSliceRejectionReason: undefined };
+      const stages = getWorkflowStages(r.workflowType);
+      if (updated.meterApproved) {
+        return { ...updated, stageIndex: Math.min(updated.stageIndex + 1, stages.length - 1), completedActions: [] };
+      }
+      return updated;
+    });
+    notify();
+  }, []);
+
+  /** P&E approves the meter slice. If SD slice is also approved, advance to next stage. */
+  const approveMeterSlice = useCallback((requestId: string) => {
+    globalRequests = globalRequests.map((r) => {
+      if (r.id !== requestId) return r;
+      const updated = { ...r, meterApproved: true, meterSliceRejectionReason: undefined };
+      const stages = getWorkflowStages(r.workflowType);
+      const sdDone = updated.sdDecision !== "pending" || updated.sdApproved;
+      if (sdDone) {
+        return { ...updated, stageIndex: Math.min(updated.stageIndex + 1, stages.length - 1), completedActions: [] };
+      }
+      return updated;
+    });
+    notify();
+  }, []);
+
+  const rejectSdSlice = useCallback((requestId: string, reason: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId
+        ? { ...r, sdSubmitted: false, sdApproved: false, sdSliceRejectionReason: reason }
+        : r,
+    );
+    notify();
+  }, []);
+
+  const rejectMeterSlice = useCallback((requestId: string, reason: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId
+        ? { ...r, meterSubmitted: false, meterApproved: false, meterSliceRejectionReason: reason }
+        : r,
+    );
+    notify();
+  }, []);
+
   return {
     requests: globalRequests,
     advanceStage,
@@ -363,5 +454,11 @@ export function useRequestStore() {
     updateRequestAddress,
     updateLoad,
     selectPowerMeter,
+    submitSdSlice,
+    submitMeterSlice,
+    approveSdSlice,
+    approveMeterSlice,
+    rejectSdSlice,
+    rejectMeterSlice,
   };
 }
