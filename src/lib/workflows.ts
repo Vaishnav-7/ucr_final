@@ -58,7 +58,7 @@ const SITE_VISIT_FORM_ACTION: WorkflowAction = {
   label: "Site Visit Form",
   type: "confirm",
   fields: [
-    { name: "category_tariff", label: "Category & Tariff", type: "select", options: ["33kV", "11kV", "415V", "230V"] },
+    { name: "category_tariff", label: "Category", type: "select", options: ["33kV", "11kV", "415V", "230V"] },
     { name: "details_of_load", label: "Details of Load", type: "text" },
     { name: "meter_type", label: "Meter Type", type: "select", options: ["3-PHASE", "1-PHASE"] },
     { name: "meter_make", label: "Meter Make", type: "select", options: ["Saral", "Secure", "Schneider Electric", "L&T", "Other"] },
