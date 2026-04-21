@@ -84,6 +84,9 @@ export interface ConnectionRequest {
   meterSubmitted?: boolean;
   meterApproved?: boolean;
   meterSliceRejectionReason?: string;
+  /** Site-visit operative assigned by P&E when scheduling the visit. The mobile
+   *  acts as their login credential for the Site Visit dashboard. */
+  siteVisitor?: { name: string; mobile: string };
 }
 
 export const INITIAL_REQUESTS: ConnectionRequest[] = [
