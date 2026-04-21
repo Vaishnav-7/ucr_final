@@ -151,7 +151,7 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
 
   // Auto-submit on mount unless Power T&C must be accepted first.
   useEffect(() => {
-    if (!requiresPowerTerms && !submittedRef.current) {
+    if (!requiresTerms && !submittedRef.current) {
       submittedRef.current = true;
       handleSubmit();
     }
