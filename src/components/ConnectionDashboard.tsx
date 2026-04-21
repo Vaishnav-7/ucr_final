@@ -21,7 +21,7 @@ interface ConnectionDashboardProps {
 type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProps) => {
-  const { requests, advanceStage, markActionCompleted, clearRejection, requestExtension, deactivateConnection, selectPowerMeter, submitSdSlice, submitMeterSlice } = useRequestStore();
+  const { requests, advanceStage, markActionCompleted, clearRejection, requestExtension, deactivateConnection, selectPowerMeter, submitSdSlice, submitMeterSlice, submitPreferredSiteVisitDate } = useRequestStore();
   const { getDocumentsForRequest } = useDocumentStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
@@ -33,6 +33,10 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
   const [powerRows, setPowerRows] = useState<PowerMeterRow[]>(getPowerMeterRows());
   const [powerFooter, setPowerFooter] = useState(getPowerFooterNote());
   const [waterRecMsg, setWaterRecMsg] = useState(getWaterRecommendation());
+
+  // Customer slotting (preferred date) state — keyed per request id
+  const [slotDateDraft, setSlotDateDraft] = useState<Record<string, Date | undefined>>({});
+  const [slotPickerOpen, setSlotPickerOpen] = useState<string | null>(null);
 
   // Extension / Deactivation state
   const [extModalReqId, setExtModalReqId] = useState<string | null>(null);
