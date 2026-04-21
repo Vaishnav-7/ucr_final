@@ -371,6 +371,73 @@ export function useRequestStore() {
     notify();
   }, []);
 
+  /** Customer submits SD payment proof on the combined parallel stage → routes to Finance. */
+  const submitSdSlice = useCallback((requestId: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId
+        ? { ...r, sdSubmitted: true, sdApproved: false, sdSliceRejectionReason: undefined }
+        : r,
+    );
+    notify();
+  }, []);
+
+  /** Customer submits meter calibration cert on the combined parallel stage → routes to P&E. */
+  const submitMeterSlice = useCallback((requestId: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId
+        ? { ...r, meterSubmitted: true, meterApproved: false, meterSliceRejectionReason: undefined }
+        : r,
+    );
+    notify();
+  }, []);
+
+  /** Finance approves the SD slice. If meter slice is also approved, advance to next stage. */
+  const approveSdSlice = useCallback((requestId: string) => {
+    globalRequests = globalRequests.map((r) => {
+      if (r.id !== requestId) return r;
+      const updated = { ...r, sdApproved: true, sdSliceRejectionReason: undefined };
+      const stages = getWorkflowStages(r.workflowType);
+      if (updated.meterApproved) {
+        return { ...updated, stageIndex: Math.min(updated.stageIndex + 1, stages.length - 1), completedActions: [] };
+      }
+      return updated;
+    });
+    notify();
+  }, []);
+
+  /** P&E approves the meter slice. If SD slice is also approved, advance to next stage. */
+  const approveMeterSlice = useCallback((requestId: string) => {
+    globalRequests = globalRequests.map((r) => {
+      if (r.id !== requestId) return r;
+      const updated = { ...r, meterApproved: true, meterSliceRejectionReason: undefined };
+      const stages = getWorkflowStages(r.workflowType);
+      const sdDone = updated.sdDecision !== "pending" || updated.sdApproved;
+      if (sdDone) {
+        return { ...updated, stageIndex: Math.min(updated.stageIndex + 1, stages.length - 1), completedActions: [] };
+      }
+      return updated;
+    });
+    notify();
+  }, []);
+
+  const rejectSdSlice = useCallback((requestId: string, reason: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId
+        ? { ...r, sdSubmitted: false, sdApproved: false, sdSliceRejectionReason: reason }
+        : r,
+    );
+    notify();
+  }, []);
+
+  const rejectMeterSlice = useCallback((requestId: string, reason: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId
+        ? { ...r, meterSubmitted: false, meterApproved: false, meterSliceRejectionReason: reason }
+        : r,
+    );
+    notify();
+  }, []);
+
   return {
     requests: globalRequests,
     advanceStage,
@@ -387,5 +454,11 @@ export function useRequestStore() {
     updateRequestAddress,
     updateLoad,
     selectPowerMeter,
+    submitSdSlice,
+    submitMeterSlice,
+    approveSdSlice,
+    approveMeterSlice,
+    rejectSdSlice,
+    rejectMeterSlice,
   };
 }
