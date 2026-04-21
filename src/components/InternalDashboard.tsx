@@ -1099,7 +1099,11 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                 const timelineLabels = getTimelineLabels(req.workflowType);
                 const isExpanded = expandedId === req.id;
                 const isCompleted = req.stageIndex >= stages.length - 1;
-                const isMine = STAGE_ROLE_MAP[currentStage.id] === role && !isCompleted;
+                const isMine = !isCompleted && (
+                  currentStage.id === "sd-and-meter"
+                    ? combinedStagePendingForRole(req)
+                    : STAGE_ROLE_MAP[currentStage.id] === role
+                );
 
                 return (
                   <motion.div
