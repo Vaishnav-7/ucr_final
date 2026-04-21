@@ -117,11 +117,22 @@ const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProp
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
     if (r.stageIndex >= stages.length - 1) return false;
     if (r.rejectionReason) return isActionableRejection(r);
+    // Combined parallel stage: only "Take Action" if there's actually something pending the customer.
+    if (stage.id === "sd-and-meter") {
+      const sdNeedsCustomer = r.sdDecision === "pending" && (!r.sdSubmitted || !!r.sdSliceRejectionReason);
+      const meterNeedsCustomer = !r.meterApproved && (!r.meterSubmitted || !!r.meterSliceRejectionReason);
+      return sdNeedsCustomer || meterNeedsCustomer;
+    }
     return stage.userActionRequired;
   });
   const progressRequests = requests.filter((r) => {
     const stages = getWorkflowStages(r.workflowType);
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
+    if (stage.id === "sd-and-meter" && r.stageIndex < stages.length - 1 && !r.rejectionReason) {
+      const sdNeedsCustomer = r.sdDecision === "pending" && (!r.sdSubmitted || !!r.sdSliceRejectionReason);
+      const meterNeedsCustomer = !r.meterApproved && (!r.meterSubmitted || !!r.meterSliceRejectionReason);
+      return !(sdNeedsCustomer || meterNeedsCustomer);
+    }
     return r.stageIndex < stages.length - 1 && !stage.userActionRequired && !r.rejectionReason;
   });
 
