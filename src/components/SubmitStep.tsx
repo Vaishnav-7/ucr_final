@@ -27,6 +27,7 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
   const [submitted, setSubmitted] = useState(false);
   const utilitiesList: string[] = wizardData.utility?.selectedUtilities || [];
   const requiresPowerTerms = utilitiesList.includes("power");
+  const isNonMetered = wizardData.utility?.meterType === "non-metered";
   const [showTerms, setShowTerms] = useState(requiresPowerTerms);
   const [agreed, setAgreed] = useState(false);
   const submittedRef = useRef(false);
