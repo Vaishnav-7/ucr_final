@@ -21,7 +21,7 @@ interface ConnectionDashboardProps {
 type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const ConnectionDashboard = ({ onNewRequest, onLogout }: ConnectionDashboardProps) => {
-  const { requests, advanceStage, markActionCompleted, clearRejection, requestExtension, deactivateConnection, selectPowerMeter } = useRequestStore();
+  const { requests, advanceStage, markActionCompleted, clearRejection, requestExtension, deactivateConnection, selectPowerMeter, submitSdSlice, submitMeterSlice } = useRequestStore();
   const { getDocumentsForRequest } = useDocumentStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
