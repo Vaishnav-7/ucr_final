@@ -239,6 +239,8 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     if ((role === "pne" || role === "spoc") && (stage.id === "site-visit" || stage.id === "slotting")) {
       setSiteVisitReqId(reqId);
       setSiteVisitEditMode("schedule");
+      setSiteVisitorName(req.siteVisitor?.name ?? "");
+      setSiteVisitorMobile(req.siteVisitor?.mobile ?? "");
       // Pre-fill calendar with the customer's preferred date (or any prior choice).
       const prefer = req.preferredSiteVisitDate || req.siteVisitDate;
       if (prefer) {
