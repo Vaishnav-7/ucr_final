@@ -282,11 +282,14 @@ export function useRequestStore() {
     notify();
   }, []);
 
-  const scheduleSiteVisit = useCallback((requestId: string, date: string) => {
+  const scheduleSiteVisit = useCallback((requestId: string, date: string, siteVisitor?: { name: string; mobile: string }) => {
     globalRequests = globalRequests.map((r) => {
       if (r.id !== requestId) return r;
       const stages = getWorkflowStages(r.workflowType);
-      return { ...r, siteVisitDate: date, stageIndex: Math.min(r.stageIndex + 1, stages.length - 1) };
+      const sv = siteVisitor && siteVisitor.name.trim() && siteVisitor.mobile.trim()
+        ? { name: siteVisitor.name.trim(), mobile: siteVisitor.mobile.replace(/\D/g, "").slice(-10) }
+        : r.siteVisitor;
+      return { ...r, siteVisitDate: date, siteVisitor: sv, stageIndex: Math.min(r.stageIndex + 1, stages.length - 1) };
     });
     notify();
   }, []);
@@ -302,10 +305,14 @@ export function useRequestStore() {
 
   /** P&E updates the confirmed site visit date AFTER it was already scheduled
    *  (allowed up until the site-visit-form is submitted). Does not change stage. */
-  const updateConfirmedSiteVisitDate = useCallback((requestId: string, date: string) => {
-    globalRequests = globalRequests.map((r) =>
-      r.id === requestId ? { ...r, siteVisitDate: date } : r,
-    );
+  const updateConfirmedSiteVisitDate = useCallback((requestId: string, date: string, siteVisitor?: { name: string; mobile: string }) => {
+    globalRequests = globalRequests.map((r) => {
+      if (r.id !== requestId) return r;
+      const sv = siteVisitor && siteVisitor.name.trim() && siteVisitor.mobile.trim()
+        ? { name: siteVisitor.name.trim(), mobile: siteVisitor.mobile.replace(/\D/g, "").slice(-10) }
+        : r.siteVisitor;
+      return { ...r, siteVisitDate: date, siteVisitor: sv };
+    });
     notify();
   }, []);
 
