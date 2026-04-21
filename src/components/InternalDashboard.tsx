@@ -49,6 +49,8 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   const [searchQuery, setSearchQuery] = useState("");
   const [siteVisitReqId, setSiteVisitReqId] = useState<string | null>(null);
   const [siteVisitDate, setSiteVisitDate] = useState<Date | undefined>(undefined);
+  const [siteVisitorName, setSiteVisitorName] = useState("");
+  const [siteVisitorMobile, setSiteVisitorMobile] = useState("");
   /** When true, the calendar modal updates the confirmed date in place (no stage advance). */
   const [siteVisitEditMode, setSiteVisitEditMode] = useState<"schedule" | "edit">("schedule");
   const [sdModalReqId, setSdModalReqId] = useState<string | null>(null);
