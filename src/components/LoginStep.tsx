@@ -143,7 +143,8 @@ const LoginStep = ({ onNext }: LoginStepProps) => {
   }, [ccSubmitted, mobile]);
 
   const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
-  const detectedRole = MOBILE_ROLE_MAP[cleanMobile] || "user";
+  const detectedRole: UserRole =
+    MOBILE_ROLE_MAP[cleanMobile] ?? (isSiteVisitorMobile(cleanMobile) ? "site-visit" : "user");
 
   const allDocsUploaded = uploadedDocs.gstCertificate && uploadedDocs.panCard && uploadedDocs.tanNumber;
 
