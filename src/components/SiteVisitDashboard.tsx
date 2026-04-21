@@ -160,10 +160,11 @@ const SiteVisitDashboard = ({ onLogout }: SiteVisitDashboardProps) => {
             {/* Selected meter (Power) */}
             {req.selectedMeter && (
               <>
-                {renderDetailRow(<Settings className="w-4 h-4 text-muted-foreground" />, "Selected Meter Type", req.selectedMeter.meterType)}
-                {renderDetailRow(<Settings className="w-4 h-4 text-muted-foreground" />, "Meter Class", req.selectedMeter.meterClass)}
-                {renderDetailRow(<Settings className="w-4 h-4 text-muted-foreground" />, "CT Ratio", req.selectedMeter.ctRatio)}
-                {renderDetailRow(<Settings className="w-4 h-4 text-muted-foreground" />, "Load Range", req.selectedMeter.loadRange)}
+              {renderDetailRow(<Settings className="w-4 h-4 text-muted-foreground" />, "Meter Make", req.selectedMeter.make)}
+                {renderDetailRow(<Settings className="w-4 h-4 text-muted-foreground" />, "Meter Model", req.selectedMeter.model)}
+                {renderDetailRow(<Settings className="w-4 h-4 text-muted-foreground" />, "Connection", req.selectedMeter.conn)}
+                {renderDetailRow(<Settings className="w-4 h-4 text-muted-foreground" />, "CT Required", req.selectedMeter.ct)}
+                {req.selectedMeter.remark && renderDetailRow(<Settings className="w-4 h-4 text-muted-foreground" />, "Remark", req.selectedMeter.remark)}
               </>
             )}
 
