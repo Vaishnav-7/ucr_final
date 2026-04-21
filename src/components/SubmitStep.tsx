@@ -26,9 +26,11 @@ interface SubmitStepProps {
 const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
   const [submitted, setSubmitted] = useState(false);
   const utilitiesList: string[] = wizardData.utility?.selectedUtilities || [];
-  const requiresPowerTerms = utilitiesList.includes("power");
+  const includesPower = utilitiesList.includes("power");
+  const includesWater = utilitiesList.includes("water");
+  const requiresTerms = includesPower || includesWater;
   const isNonMetered = wizardData.utility?.meterType === "non-metered";
-  const [showTerms, setShowTerms] = useState(requiresPowerTerms);
+  const [showTerms, setShowTerms] = useState(requiresTerms);
   const [agreed, setAgreed] = useState(false);
   const submittedRef = useRef(false);
 
