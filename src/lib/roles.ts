@@ -43,7 +43,10 @@ export const STAGE_ROLE_MAP: Record<string, UserRole> = {
   "calibration-uploaded": "pne",
 
   // Shared
-  "slotting": "pne",
+  // Slotting is a parallel stage: customer first proposes a preferred date,
+  // then P&E accepts or edits it. Default owner here is "user"; dynamic routing
+  // is handled in dashboards based on whether preferredSiteVisitDate is set.
+  "slotting": "user",
   "site-visit": "pne",
   "site-visit-form": "pne",
   "pne-final-approval": "pne",

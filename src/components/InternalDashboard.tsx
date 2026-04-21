@@ -38,7 +38,7 @@ interface InternalDashboardProps {
 type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad, approveSdSlice, approveMeterSlice, rejectSdSlice, rejectMeterSlice } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, updateConfirmedSiteVisitDate, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad, approveSdSlice, approveMeterSlice, rejectSdSlice, rejectMeterSlice } = useRequestStore();
   const ccStore = useCcRequestStore();
   const customerStore = useCustomerStore();
   const { getDocumentsForRequest } = useDocumentStore();
@@ -49,6 +49,8 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   const [searchQuery, setSearchQuery] = useState("");
   const [siteVisitReqId, setSiteVisitReqId] = useState<string | null>(null);
   const [siteVisitDate, setSiteVisitDate] = useState<Date | undefined>(undefined);
+  /** When true, the calendar modal updates the confirmed date in place (no stage advance). */
+  const [siteVisitEditMode, setSiteVisitEditMode] = useState<"schedule" | "edit">("schedule");
   const [sdModalReqId, setSdModalReqId] = useState<string | null>(null);
   const [sdChoice, setSdChoice] = useState<SdDecision | null>(null);
   const [sdWaiverFile, setSdWaiverFile] = useState<string>("");
@@ -142,6 +144,12 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     return false;
   };
 
+  /** Slotting stage routing: pending for P&E once the customer has submitted a preferred date. */
+  const slottingStagePendingForRole = (r: ConnectionRequest): boolean => {
+    if (role !== "pne") return false;
+    return !!r.preferredSiteVisitDate;
+  };
+
   // All requests where current stage belongs to this role and not completed → "Take Action"
   const myPendingRequests = visibleRequests.filter((r) => {
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
@@ -150,6 +158,9 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     const isCompleted = r.stageIndex >= stages.length - 1;
     if (stage.id === "sd-and-meter") {
       return !isCompleted && !r.rejectionReason && combinedStagePendingForRole(r);
+    }
+    if (stage.id === "slotting") {
+      return !isCompleted && !r.rejectionReason && slottingStagePendingForRole(r);
     }
     return stageRole === role && !isCompleted && !r.rejectionReason;
   });
@@ -168,6 +179,11 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     const isCompleted = r.stageIndex >= stages.length - 1;
     if (stage.id === "sd-and-meter") {
       return !isCompleted && !r.rejectionReason && !combinedStagePendingForRole(r);
+    }
+    if (stage.id === "slotting") {
+      // For P&E: still in progress while waiting on customer to propose date.
+      // For other roles: always in-progress (slotting isn't theirs).
+      return !isCompleted && !r.rejectionReason && !slottingStagePendingForRole(r);
     }
     // Active but not awaiting this role's action and not rejected
     return !isCompleted && !r.rejectionReason && stageRole !== role;
@@ -220,6 +236,15 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     // Site visit scheduling for P&E
     if ((role === "pne" || role === "spoc") && (stage.id === "site-visit" || stage.id === "slotting")) {
       setSiteVisitReqId(reqId);
+      setSiteVisitEditMode("schedule");
+      // Pre-fill calendar with the customer's preferred date (or any prior choice).
+      const prefer = req.preferredSiteVisitDate || req.siteVisitDate;
+      if (prefer) {
+        const parsed = new Date(prefer);
+        setSiteVisitDate(isNaN(parsed.getTime()) ? undefined : parsed);
+      } else {
+        setSiteVisitDate(undefined);
+      }
       return;
     }
 
@@ -261,9 +286,15 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
   const handleScheduleSiteVisit = () => {
     if (siteVisitReqId && siteVisitDate) {
-      scheduleSiteVisit(siteVisitReqId, format(siteVisitDate, "dd MMMM yyyy"));
+      const formatted = format(siteVisitDate, "dd MMMM yyyy");
+      if (siteVisitEditMode === "edit") {
+        updateConfirmedSiteVisitDate(siteVisitReqId, formatted);
+      } else {
+        scheduleSiteVisit(siteVisitReqId, formatted);
+      }
       setSiteVisitReqId(null);
       setSiteVisitDate(undefined);
+      setSiteVisitEditMode("schedule");
     }
   };
 
@@ -1116,7 +1147,9 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                 const isMine = !isCompleted && (
                   currentStage.id === "sd-and-meter"
                     ? combinedStagePendingForRole(req)
-                    : STAGE_ROLE_MAP[currentStage.id] === role
+                    : currentStage.id === "slotting"
+                      ? slottingStagePendingForRole(req)
+                      : STAGE_ROLE_MAP[currentStage.id] === role
                 );
 
                 return (
@@ -1570,8 +1603,29 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                           onClick={() => handleApprove(req.id)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-success/10 text-success hover:bg-success/20 transition-all active:scale-[0.97]"
                         >
-                          <CheckCircle2 className="w-4 h-4" /> {(role === "pne" || role === "spoc") && (currentStage.id === "site-visit" || currentStage.id === "slotting") ? "Schedule Slot" : currentStage.id === "site-visit-form" ? "Fill Site Visit Form" : "Approve"}
+                          <CheckCircle2 className="w-4 h-4" /> {(role === "pne" || role === "spoc") && currentStage.id === "site-visit" ? "Schedule Slot" : (role === "pne" || role === "spoc") && currentStage.id === "slotting" ? "Accept / Change Date" : currentStage.id === "site-visit-form" ? "Fill Site Visit Form" : "Approve"}
                         </button>
+                        {/* P&E can keep changing the confirmed date even after slotting,
+                            up until the site visit form is submitted. */}
+                        {(role === "pne" || role === "spoc") && currentStage.id === "site-visit-form" && (
+                          <button
+                            onClick={() => {
+                              setSiteVisitReqId(req.id);
+                              setSiteVisitEditMode("edit");
+                              const cur = req.siteVisitDate || req.preferredSiteVisitDate;
+                              if (cur) {
+                                const parsed = new Date(cur);
+                                setSiteVisitDate(isNaN(parsed.getTime()) ? undefined : parsed);
+                              } else {
+                                setSiteVisitDate(undefined);
+                              }
+                            }}
+                            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-info/10 text-info hover:bg-info/20 transition-all active:scale-[0.97]"
+                            title="Change confirmed site visit date"
+                          >
+                            <CalendarIcon className="w-4 h-4" /> Change Date
+                          </button>
+                        )}
                         <button
                           onClick={() => setRejectModalId(req.id)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all active:scale-[0.97]"
@@ -1597,7 +1651,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); }} />
+            <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); setSiteVisitEditMode("schedule"); }} />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1609,8 +1663,28 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                   <CalendarIcon className="w-5 h-5 text-info" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold font-display text-foreground">Schedule Site Visit</h3>
+                  <h3 className="text-lg font-bold font-display text-foreground">
+                    {siteVisitEditMode === "edit" ? "Change Site Visit Date" : "Schedule Site Visit"}
+                  </h3>
                   <p className="text-sm text-muted-foreground">{siteVisitReqId}</p>
+                  {(() => {
+                    const r = requests.find((rr) => rr.id === siteVisitReqId);
+                    if (!r) return null;
+                    return (
+                      <div className="mt-2 space-y-1">
+                        {r.preferredSiteVisitDate && (
+                          <p className="text-xs text-info">
+                            Customer's preferred date: <span className="font-semibold">{r.preferredSiteVisitDate}</span>
+                          </p>
+                        )}
+                        {siteVisitEditMode === "edit" && r.siteVisitDate && (
+                          <p className="text-xs text-muted-foreground">
+                            Currently confirmed: <span className="font-semibold text-foreground">{r.siteVisitDate}</span>
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -1629,7 +1703,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
               )}
 
               <div className="flex gap-3 mt-5">
-                <button onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); }} className="btn-secondary flex-1">
+                <button onClick={() => { setSiteVisitReqId(null); setSiteVisitDate(undefined); setSiteVisitEditMode("schedule"); }} className="btn-secondary flex-1">
                   Cancel
                 </button>
                 <button
@@ -1637,7 +1711,7 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
                   disabled={!siteVisitDate}
                   className="flex-1 gradient-bg text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-90 disabled:opacity-50"
                 >
-                  Confirm
+                  {siteVisitEditMode === "edit" ? "Update Date" : "Confirm"}
                 </button>
               </div>
             </motion.div>

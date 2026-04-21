@@ -61,6 +61,8 @@ export interface ConnectionRequest {
   rejectionReason?: string;
   submittedDocs?: string[];
   siteVisitDate?: string;
+  /** Customer-proposed preferred site visit date (slotting stage). */
+  preferredSiteVisitDate?: string;
   userDetails?: RequestUserDetails;
   sdDecision?: SdDecision;
   sdWaiverProof?: string;
@@ -250,6 +252,24 @@ export function useRequestStore() {
       const stages = getWorkflowStages(r.workflowType);
       return { ...r, siteVisitDate: date, stageIndex: Math.min(r.stageIndex + 1, stages.length - 1) };
     });
+    notify();
+  }, []);
+
+  /** Customer submits (or updates) their preferred site visit date.
+   *  Stays at slotting stage — P&E still needs to accept/edit. */
+  const submitPreferredSiteVisitDate = useCallback((requestId: string, date: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId ? { ...r, preferredSiteVisitDate: date } : r,
+    );
+    notify();
+  }, []);
+
+  /** P&E updates the confirmed site visit date AFTER it was already scheduled
+   *  (allowed up until the site-visit-form is submitted). Does not change stage. */
+  const updateConfirmedSiteVisitDate = useCallback((requestId: string, date: string) => {
+    globalRequests = globalRequests.map((r) =>
+      r.id === requestId ? { ...r, siteVisitDate: date } : r,
+    );
     notify();
   }, []);
 
@@ -445,6 +465,8 @@ export function useRequestStore() {
     rejectRequest,
     clearRejection,
     scheduleSiteVisit,
+    submitPreferredSiteVisitDate,
+    updateConfirmedSiteVisitDate,
     setSdDecision,
     updateConnectionType,
     requestExtension,
