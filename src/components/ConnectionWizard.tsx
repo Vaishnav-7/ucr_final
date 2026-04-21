@@ -116,6 +116,10 @@ const ConnectionWizard = () => {
     setUserRole(null);
   };
 
+  if (showDashboard && userRole === "site-visit") {
+    return <SiteVisitDashboard onLogout={handleLogout} />;
+  }
+
   if (showDashboard && userRole && userRole !== "user") {
     const roleInfo = ROLES.find((r) => r.id === userRole)!;
     const userMobile = wizardData.login?.mobile as string | undefined;
