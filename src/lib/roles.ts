@@ -1,4 +1,4 @@
-export type UserRole = "user" | "finance" | "spoc" | "pne";
+export type UserRole = "user" | "finance" | "spoc" | "pne" | "site-visit";
 
 export interface RoleInfo {
   id: UserRole;
