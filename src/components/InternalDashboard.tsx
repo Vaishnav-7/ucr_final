@@ -38,7 +38,7 @@ interface InternalDashboardProps {
 type DashFilter = "all" | "action" | "progress" | "approved" | "rejected";
 
 const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDashboardProps) => {
-  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad, approveSdSlice, approveMeterSlice, rejectSdSlice, rejectMeterSlice } = useRequestStore();
+  const { requests, advanceStage, rejectRequest, scheduleSiteVisit, updateConfirmedSiteVisitDate, setSdDecision, updateConnectionType, approveExtension, rejectExtension, updateRequestAddress, updateLoad, approveSdSlice, approveMeterSlice, rejectSdSlice, rejectMeterSlice } = useRequestStore();
   const ccStore = useCcRequestStore();
   const customerStore = useCustomerStore();
   const { getDocumentsForRequest } = useDocumentStore();
@@ -49,6 +49,8 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   const [searchQuery, setSearchQuery] = useState("");
   const [siteVisitReqId, setSiteVisitReqId] = useState<string | null>(null);
   const [siteVisitDate, setSiteVisitDate] = useState<Date | undefined>(undefined);
+  /** When true, the calendar modal updates the confirmed date in place (no stage advance). */
+  const [siteVisitEditMode, setSiteVisitEditMode] = useState<"schedule" | "edit">("schedule");
   const [sdModalReqId, setSdModalReqId] = useState<string | null>(null);
   const [sdChoice, setSdChoice] = useState<SdDecision | null>(null);
   const [sdWaiverFile, setSdWaiverFile] = useState<string>("");
@@ -142,6 +144,12 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     return false;
   };
 
+  /** Slotting stage routing: pending for P&E once the customer has submitted a preferred date. */
+  const slottingStagePendingForRole = (r: ConnectionRequest): boolean => {
+    if (role !== "pne") return false;
+    return !!r.preferredSiteVisitDate;
+  };
+
   // All requests where current stage belongs to this role and not completed → "Take Action"
   const myPendingRequests = visibleRequests.filter((r) => {
     const stage = getCurrentStage(r.workflowType, r.stageIndex);
@@ -150,6 +158,9 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     const isCompleted = r.stageIndex >= stages.length - 1;
     if (stage.id === "sd-and-meter") {
       return !isCompleted && !r.rejectionReason && combinedStagePendingForRole(r);
+    }
+    if (stage.id === "slotting") {
+      return !isCompleted && !r.rejectionReason && slottingStagePendingForRole(r);
     }
     return stageRole === role && !isCompleted && !r.rejectionReason;
   });
@@ -168,6 +179,11 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     const isCompleted = r.stageIndex >= stages.length - 1;
     if (stage.id === "sd-and-meter") {
       return !isCompleted && !r.rejectionReason && !combinedStagePendingForRole(r);
+    }
+    if (stage.id === "slotting") {
+      // For P&E: still in progress while waiting on customer to propose date.
+      // For other roles: always in-progress (slotting isn't theirs).
+      return !isCompleted && !r.rejectionReason && !slottingStagePendingForRole(r);
     }
     // Active but not awaiting this role's action and not rejected
     return !isCompleted && !r.rejectionReason && stageRole !== role;
@@ -220,6 +236,15 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
     // Site visit scheduling for P&E
     if ((role === "pne" || role === "spoc") && (stage.id === "site-visit" || stage.id === "slotting")) {
       setSiteVisitReqId(reqId);
+      setSiteVisitEditMode("schedule");
+      // Pre-fill calendar with the customer's preferred date (or any prior choice).
+      const prefer = req.preferredSiteVisitDate || req.siteVisitDate;
+      if (prefer) {
+        const parsed = new Date(prefer);
+        setSiteVisitDate(isNaN(parsed.getTime()) ? undefined : parsed);
+      } else {
+        setSiteVisitDate(undefined);
+      }
       return;
     }
 
@@ -261,9 +286,15 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
   const handleScheduleSiteVisit = () => {
     if (siteVisitReqId && siteVisitDate) {
-      scheduleSiteVisit(siteVisitReqId, format(siteVisitDate, "dd MMMM yyyy"));
+      const formatted = format(siteVisitDate, "dd MMMM yyyy");
+      if (siteVisitEditMode === "edit") {
+        updateConfirmedSiteVisitDate(siteVisitReqId, formatted);
+      } else {
+        scheduleSiteVisit(siteVisitReqId, formatted);
+      }
       setSiteVisitReqId(null);
       setSiteVisitDate(undefined);
+      setSiteVisitEditMode("schedule");
     }
   };
 
