@@ -123,25 +123,24 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     waterDemand: { domesticKL: 25, flushingKL: 10, roKL: 8, totalKL: 43 },
   },
 
-  // ── Active / in-progress requests ──
-  { id: "REQ-2024-001", utility: "Power", type: "Postpaid", workflowType: "power-regular", address: "Tower A, Block 4, Cyber City", addressId: "ADDR-S001", stageIndex: 8, date: "2024-01-15" },
-  { id: "REQ-2024-002", utility: "Water", type: "Existing Meter", workflowType: "water-existing-meter", address: "Unit 12, Trade Centre", addressId: "ADDR-S002", stageIndex: 3, date: "2024-02-20" },
-  { id: "REQ-2024-003", utility: "Power", type: "Temporary", workflowType: "power-temporary", address: "Plot 7, Industrial Area", addressId: "ADDR-S003", stageIndex: 2, date: "2024-03-01", expiry: "2024-06-01" },
-  { id: "REQ-2024-004", utility: "Power", type: "Postpaid", workflowType: "power-regular", address: "Tower A, Block 4, Cyber City", addressId: "ADDR-S001", stageIndex: 5, date: "2024-03-10" },
-  { id: "REQ-2024-005", utility: "Power", type: "Temporary", workflowType: "power-temporary", address: "Warehouse 5, Sector 18", addressId: "ADDR-S004", stageIndex: 7, date: "2024-01-05", expiry: "2024-04-05" },
-  { id: "REQ-2024-006", utility: "Water", type: "New Meter", workflowType: "water-no-meter", address: "Warehouse 5, Sector 18", addressId: "ADDR-S004", stageIndex: 2, date: "2024-03-15" },
-  { id: "REQ-2024-007", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", address: "Shop 3, Market Complex", addressId: "ADDR-S005", stageIndex: 1, date: "2024-03-18" },
-  { id: "REQ-2024-008", utility: "Power", type: "Prepaid", workflowType: "power-prepaid", address: "Shop 3, Market Complex", addressId: "ADDR-S005", stageIndex: 3, date: "2024-03-12" },
-
   // ── Site Visit assignments (stage = site-visit-form) — fully detailed for site-visit role ──
   {
     id: "REQ-2024-201", utility: "Power", type: "Postpaid", workflowType: "power-regular",
     address: "Tower B, Floor 12, Cyber City, Sector 24", addressId: "ADDR-S010", spaceId: "SPC-1042",
     stageIndex: 5, date: "2024-03-22", siteVisitDate: "12 April 2024",
     userDetails: { customerName: "Nimbus Analytics Pvt Ltd", customerCode: "CC-7012", contactPerson: "Vikram Joshi", mobile: "9811223344", email: "vikram@nimbus.io" },
-    loadData: { method: "calculator", totalKVA: 75.5, totalKVAH: 540, appliances: [] },
+    loadData: {
+      method: "calculator", totalKVA: 75.5, totalKVAH: 540,
+      appliances: [
+        { name: "Split AC 2 Ton", kw: 2.2, qty: 12 },
+        { name: "Workstation PCs", kw: 0.4, qty: 60 },
+        { name: "LED Panel Lights", kw: 0.04, qty: 120 },
+        { name: "Server Rack", kw: 5, qty: 2 },
+        { name: "Pantry Equipment", kw: 6, qty: 1 },
+      ],
+    },
     selectedMeter: { make: "Secure", model: "Elite 444", conn: "3-Phase 4-Wire", ct: "Yes", remark: "CT 100/5A required" },
-    sdDecision: "collected", sdAmount: "45000",
+    sdDecision: "collected",
   },
   {
     id: "REQ-2024-202", utility: "Power", type: "Temporary", workflowType: "power-temporary",
@@ -150,13 +149,7 @@ export const INITIAL_REQUESTS: ConnectionRequest[] = [
     userDetails: { customerName: "Skyline Constructions", customerCode: "CC-8045", contactPerson: "Deepak Mehra", mobile: "9822334455", email: "deepak@skylinecons.in" },
     loadData: { method: "upload", totalKVA: 200, totalKVAH: 1600, docUploaded: true },
     selectedMeter: { make: "L&T", model: "ER300P", conn: "3-Phase 4-Wire", ct: "Yes", remark: "Outdoor enclosure" },
-    sdDecision: "collected", sdAmount: "120000",
-  },
-  {
-    id: "REQ-2024-203", utility: "Power", type: "Prepaid", workflowType: "power-prepaid",
-    address: "Shop 18, Plaza Arcade, Main Market Road", addressId: "ADDR-S012", spaceId: "SPC-3301",
-    stageIndex: 3, date: "2024-03-28", siteVisitDate: "16 April 2024",
-    userDetails: { customerName: "Café Aroma", customerCode: "CC-9077", contactPerson: "Neha Kapoor", mobile: "9833445566", email: "neha@cafearoma.in" },
+    sdDecision: "collected",
   },
   {
     id: "REQ-2024-204", utility: "Water", type: "Existing Meter", workflowType: "water-existing-meter",
