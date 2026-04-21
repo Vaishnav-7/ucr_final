@@ -170,14 +170,17 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
     <Dialog open={showTerms} onOpenChange={(open) => { if (!open && !submittedRef.current) { /* prevent dismiss */ setShowTerms(true); } }}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>
-            Terms &amp; Conditions — {isNonMetered ? "Non-Metered" : "Metered"} Power Connection
-          </DialogTitle>
+          <DialogTitle>Terms &amp; Conditions</DialogTitle>
           <DialogDescription>
-            Please read and accept the terms below before submitting your power connection request.
+            Please read and accept the terms below before submitting your connection request.
           </DialogDescription>
         </DialogHeader>
-        <div className="overflow-y-auto pr-2 text-sm text-foreground space-y-2">
+        <div className="overflow-y-auto pr-2 text-sm text-foreground space-y-4">
+          {includesPower && (
+            <div>
+              <h4 className="font-semibold mb-2">
+                {isNonMetered ? "Non-Metered" : "Metered"} Power Connection
+              </h4>
           {isNonMetered ? (
             <ul className="list-disc pl-5 space-y-2">
               <li>If any malpractices such as unauthorized connections or usage of high energy consuming equipment are observed, it will be considered as severe violation. Penalty shall be imposed, whichever is higher as follows:
@@ -209,6 +212,29 @@ const SubmitStep = ({ wizardData, onBack, onSubmit }: SubmitStepProps) => {
               <li>If any concessionaire submits a request 90 days after the request date, we will not provide the connection at that time.</li>
               <li>In case of non-metered connection is required, a separate non meter form shall be submitted.</li>
             </ul>
+          )}
+            </div>
+          )}
+          {includesWater && (
+            <div>
+              <h4 className="font-semibold mb-2">Water Connection</h4>
+              <ol className="list-decimal pl-5 space-y-2">
+                <li>Only <strong>pulse enabled (AMR Compatibility)</strong> water meters to be installed to support Automated Meter Reading.</li>
+                <li>Meter to be installed by respective concessionaire/tenant at their cost &amp; risk along with isolating valve and suitable strainer as specified by the manufacturer with <strong>MAKE: ITRON, ZENNER AQUAMET, KRANTHI (For Temporary Connections)</strong>.</li>
+                <li>To abide by all norms &amp; rules laid down by GHIAL and Statutory norms from time to time with respect to water connection granted to the Applicant.</li>
+                <li>To allow clear and unencumbered access to the meters for the purpose of meter reading and its checking etc.</li>
+                <li>The GHIAL shall not be held responsible for any interruption or diminution of supply of water.</li>
+                <li>If any concessionaire exceeds the projected monthly water consumption, penalty shall be imposed at 100% of consumed quantity for the period in which deviation was observed. However, if concessionaire/tenant provides one-month prior intimation, penalty shall not be applicable.</li>
+                <li>If any malpractices such as tampering of meter, temporary removal, un-authorized connections, water leakages &amp; waste-water pipeline blockages leading to pax inconvenience, affecting pax experience and any safety violations are found among concessionaires, it will be considered as severe violation. The tenant/concessionaire involved Penalty shall be imposed whichever is higher as follows:
+                  <ul className="list-[circle] pl-5 mt-1">
+                    <li>Option 1: Impose a default <strong>Rs 1,00,000/-</strong> per incident/malpractice.</li>
+                    <li>Option 2: Impose a penalty <strong>3 times of Maximum Demand</strong>.</li>
+                  </ul>
+                </li>
+                <li>Concessionaire before vacates the location Off Boarding HOTO form to be submitted, if failed to do so charges of security deposit will not be reimbursed.</li>
+                <li>The <strong>WCR (Water Connection Request) form</strong> must be <strong>readily available</strong> and presented upon request by any <strong>GHIAL personnel</strong>. Failure to produce (Not available) the WCR form when requested will result in <strong>immediate termination of the connection</strong>.</li>
+              </ol>
+            </div>
           )}
         </div>
         <div className="flex items-center gap-2 pt-2 border-t">
