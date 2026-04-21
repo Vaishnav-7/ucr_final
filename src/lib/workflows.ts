@@ -54,6 +54,14 @@ const METER_ACTIONS: WorkflowAction[] = [
   },
 ];
 
+/** Parallel stage: customer can upload SD payment proof AND meter calibration cert in any order.
+ *  Each upload routes to its respective approver (Finance for SD, P&E for calibration).
+ *  Stage advances to Slotting only after BOTH are approved. */
+const SD_AND_METER_ACTIONS: WorkflowAction[] = [
+  SD_UPLOAD_ACTION,
+  ...METER_ACTIONS,
+];
+
 const SITE_VISIT_FORM_ACTION: WorkflowAction = {
   label: "Site Visit Form",
   type: "confirm",
