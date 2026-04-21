@@ -10,6 +10,7 @@ import WaterDemandStep from "./WaterDemandStep";
 import SubmitStep from "./SubmitStep";
 import ConnectionDashboard from "./ConnectionDashboard";
 import InternalDashboard from "./InternalDashboard";
+import SiteVisitDashboard from "./SiteVisitDashboard";
 import type { UserRole } from "@/lib/roles";
 import { ROLES } from "@/lib/roles";
 import { getRegisteredUser } from "@/lib/userRegistry";
@@ -114,6 +115,10 @@ const ConnectionWizard = () => {
     setWizardData({});
     setUserRole(null);
   };
+
+  if (showDashboard && userRole === "site-visit") {
+    return <SiteVisitDashboard onLogout={handleLogout} />;
+  }
 
   if (showDashboard && userRole && userRole !== "user") {
     const roleInfo = ROLES.find((r) => r.id === userRole)!;
