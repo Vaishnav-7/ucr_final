@@ -19,6 +19,7 @@ type TabFilter = "pending" | "completed";
 
 const SiteVisitDashboard = ({ onLogout }: SiteVisitDashboardProps) => {
   const { requests, advanceStage, markActionCompleted } = useRequestStore();
+  const { getDocumentsForRequest } = useDocumentStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<WorkflowAction | null>(null);
