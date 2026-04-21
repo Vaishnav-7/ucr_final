@@ -199,6 +199,13 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
     const stage = getCurrentStage(req.workflowType, req.stageIndex);
 
+    // Combined parallel SD + Meter stage: approve only this role's slice.
+    if (stage.id === "sd-and-meter") {
+      if (role === "finance") approveSdSlice(reqId);
+      else if (role === "pne") approveMeterSlice(reqId);
+      return;
+    }
+
     // SPOC SD decision gate for power workflows
     const isSdGateStage = ["spoc-approval", "sd-decision", "sd-calculation"].includes(stage.id);
     const isSdWorkflow = req.workflowType === "power-regular" || req.workflowType === "power-temporary";
