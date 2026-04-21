@@ -54,7 +54,7 @@ async function ensureLoaded() {
     }
     if (data) {
       configId = data.id;
-      powerMeterRows = (data.power_meter_rows as PowerMeterRow[]) ?? DEFAULT_ROWS;
+      powerMeterRows = (data.power_meter_rows as unknown as PowerMeterRow[]) ?? DEFAULT_ROWS;
       powerFooterNote = data.power_footer_note ?? DEFAULT_POWER_NOTE;
       waterRecommendation = data.water_recommendation ?? DEFAULT_WATER;
       notify();
