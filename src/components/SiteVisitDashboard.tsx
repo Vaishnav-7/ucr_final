@@ -13,11 +13,13 @@ import WorkflowActionModal, { type WorkflowAction } from "./WorkflowActionModal"
 
 interface SiteVisitDashboardProps {
   onLogout: () => void;
+  /** Mobile of the logged-in site-visit user; only requests assigned to this mobile show up. */
+  userMobile?: string;
 }
 
 type TabFilter = "pending" | "completed";
 
-const SiteVisitDashboard = ({ onLogout }: SiteVisitDashboardProps) => {
+const SiteVisitDashboard = ({ onLogout, userMobile }: SiteVisitDashboardProps) => {
   const { requests, advanceStage, markActionCompleted } = useRequestStore();
   const { getDocumentsForRequest } = useDocumentStore();
   const [modalOpen, setModalOpen] = useState(false);
@@ -27,15 +29,25 @@ const SiteVisitDashboard = ({ onLogout }: SiteVisitDashboardProps) => {
   const [tab, setTab] = useState<TabFilter>("pending");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const myMobile = userMobile ? userMobile.replace(/\D/g, "").slice(-10) : "";
+
+  // Only requests assigned to this site-visitor mobile (when known).
+  const assignedRequests = myMobile
+    ? requests.filter((r) => r.siteVisitor?.mobile === myMobile)
+    : requests;
+
+  // Visitor name shown in the header — derived from the first matching assignment.
+  const visitorName = assignedRequests.find((r) => r.siteVisitor?.name)?.siteVisitor?.name ?? "";
+
   // Pending: requests at site-visit-form stage
-  const siteVisitRequests = requests.filter((r) => {
+  const siteVisitRequests = assignedRequests.filter((r) => {
     const stages = getWorkflowStages(r.workflowType);
     const currentStage = getCurrentStage(r.workflowType, r.stageIndex);
     return currentStage.id === "site-visit-form" && r.stageIndex < stages.length - 1;
   });
 
   // Completed: activated requests
-  const completedRequests = requests.filter((r) => {
+  const completedRequests = assignedRequests.filter((r) => {
     const stages = getWorkflowStages(r.workflowType);
     return r.stageIndex >= stages.length - 1;
   });
