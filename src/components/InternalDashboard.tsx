@@ -291,13 +291,20 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
   const handleScheduleSiteVisit = () => {
     if (siteVisitReqId && siteVisitDate) {
       const formatted = format(siteVisitDate, "dd MMMM yyyy");
+      const trimmedName = siteVisitorName.trim();
+      const cleanedMobile = siteVisitorMobile.replace(/\D/g, "").slice(-10);
+      const sv = trimmedName && cleanedMobile.length === 10
+        ? { name: trimmedName, mobile: cleanedMobile }
+        : undefined;
       if (siteVisitEditMode === "edit") {
-        updateConfirmedSiteVisitDate(siteVisitReqId, formatted);
+        updateConfirmedSiteVisitDate(siteVisitReqId, formatted, sv);
       } else {
-        scheduleSiteVisit(siteVisitReqId, formatted);
+        scheduleSiteVisit(siteVisitReqId, formatted, sv);
       }
       setSiteVisitReqId(null);
       setSiteVisitDate(undefined);
+      setSiteVisitorName("");
+      setSiteVisitorMobile("");
       setSiteVisitEditMode("schedule");
     }
   };
