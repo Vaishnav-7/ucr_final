@@ -269,7 +269,14 @@ const InternalDashboard = ({ role, roleLabel, userMobile, onLogout }: InternalDa
 
   const handleReject = () => {
     if (rejectModalId && rejectReason.trim()) {
-      rejectRequest(rejectModalId, rejectReason.trim());
+      const req = requests.find((r) => r.id === rejectModalId);
+      const stage = req ? getCurrentStage(req.workflowType, req.stageIndex) : null;
+      if (stage?.id === "sd-and-meter") {
+        if (role === "finance") rejectSdSlice(rejectModalId, rejectReason.trim());
+        else if (role === "pne") rejectMeterSlice(rejectModalId, rejectReason.trim());
+      } else {
+        rejectRequest(rejectModalId, rejectReason.trim());
+      }
       setRejectModalId(null);
       setRejectReason("");
     }
