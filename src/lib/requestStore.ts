@@ -220,6 +220,13 @@ export function rekeyRequestMobile(oldMobile: string, newMobile: string) {
   notify();
 }
 
+/** Returns true if any request currently has a site-visitor assignment for this mobile.
+ *  Used by the login screen to detect site-visit role from mobile. */
+export function isSiteVisitorMobile(mobile: string): boolean {
+  const norm = mobile.replace(/\D/g, "").slice(-10);
+  if (!norm) return false;
+  return globalRequests.some((r) => r.siteVisitor?.mobile === norm);
+}
 export function useRequestStore() {
   const [, setTick] = useState(0);
 
