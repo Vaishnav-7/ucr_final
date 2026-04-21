@@ -193,6 +193,13 @@ export function useRequestStore() {
     globalRequests = globalRequests.map((r) => {
       if (r.id !== requestId) return r;
       const stages = getWorkflowStages(r.workflowType);
+      const currentStage = stages[Math.min(r.stageIndex, stages.length - 1)];
+      // For the combined parallel SD+Meter stage, only advance when BOTH slices are approved.
+      if (currentStage?.id === "sd-and-meter") {
+        const sdDone = r.sdDecision !== "pending" || r.sdApproved;
+        const meterDone = !!r.meterApproved;
+        if (!(sdDone && meterDone)) return r;
+      }
       const newIndex = Math.min(r.stageIndex + 1, stages.length - 1);
       // Clear the red rejected-stage marker once we successfully pass that stage again.
       const rejectedIdx = r.rejectedFromStageId ? stages.findIndex((s) => s.id === r.rejectedFromStageId) : -1;
